@@ -1,0 +1,60 @@
+{
+  "name": "admarket",
+  "version": "1.0.0",
+  "description": "Autonomous Micro-Sponsorship Protocol",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm test && npm run redteam && npm run demo && npm run badcase && npm run worker && npm run cards",
+    "compile": "hardhat compile",
+    "deploy": "ts-node scripts/deploy.ts",
+    "deploy:base": "hardhat run scripts/deploy.ts --network baseSepolia",
+    "cards": "ts-node scripts/generateAgentCards.ts",
+    "register": "ts-node scripts/registerAgents.ts",
+    "demo": "ts-node scripts/runDemo.ts",
+    "badcase": "ts-node scripts/runBadCase.ts",
+    "showcase": "ts-node scripts/runOpenClawShowcase.ts",
+    "agenthon:local": "ts-node scripts/runAgenthonLocal.ts",
+    "loop": "ts-node scripts/runAutonomousLoop.ts",
+    "worker": "ts-node scripts/runIntentWorker.ts",
+    "redteam": "ts-node scripts/redTeam.ts",
+    "llm:probe": "ts-node scripts/probeGoogleModels.ts",
+    "discord:preflight": "ts-node scripts/discordPreflight.ts",
+    "dashboard": "ts-node server/dashboardServer.ts",
+    "openclaw": "ts-node server/openclawBridgeServer.ts",
+    "openclaw:bridge": "ts-node server/openclawBridgeServer.ts",
+    "live:preflight": "ts-node scripts/livePreflight.ts --strict",
+    "live": "ts-node scripts/runLive.ts",
+    "sponsor": "ts-node server/sponsorServer.ts",
+    "community": "ts-node server/communityServer.ts"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "ethereum",
+    "erc8004",
+    "sponsorship",
+    "advertising"
+  ],
+  "author": "ArgaAAL",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.11.0",
+    "axios": "^1.6.8",
+    "discord.js": "^14.15.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.0",
+    "three": "^0.184.0",
+    "viem": "^2.10.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "hardhat": "^2.22.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
