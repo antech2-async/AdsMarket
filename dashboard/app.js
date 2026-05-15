@@ -128,7 +128,7 @@ function renderReceipts(deal) {
 }
 
 function renderDeals(deals) {
-  if (!deals.length) return '<p class="empty">No deal state found. Run npm run demo to populate the cockpit.</p>';
+  if (!deals.length) return '<p class="empty">No sponsorship deal has been recorded yet. Start a sponsorship flow to create the first protocol state.</p>';
 
   return deals.map((deal) => `
     <article class="deal">
@@ -255,7 +255,7 @@ function renderRegistry(data) {
     ['Proof hash', theater.proof?.proofHash || latestPayment?.proofHash || latestProof?.finalHash || 'n/a'],
     ['Payment receipt', theater.proof?.receiptId || latestPayment?.receiptId || 'n/a'],
   ];
-  const chainLabel = chain.name ? chain.name + (chain.chainId ? ' / chain ' + chain.chainId : '') : 'VPS private ERC-8004-compatible demo chain';
+  const chainLabel = chain.name ? chain.name + (chain.chainId ? ' / chain ' + chain.chainId : '') : 'Local ERC-8004-compatible protocol chain';
   $('#registry-source').textContent = chainLabel + ' | values update after each run';
   $('#registry-evidence-grid').innerHTML = evidence.map(([label, value]) => [
     '<article class="evidence-tile">',
@@ -536,11 +536,11 @@ async function saveMandates() {
 function renderRunState(runState, theater, badcase) {
   if (!runState) {
     renderLiveReplay(null);
-    $('#run-log').textContent = 'No run started from this dashboard yet.';
+    $('#run-log').textContent = 'No protocol run has started from this workspace yet.';
     $('#openclaw-result').innerHTML = `
-      <span class="label">OpenClaw Agent Result</span>
-      <strong>Waiting for a live OpenClaw run.</strong>
-      <p>Click "OpenClaw + GLM" to record the LLM agent calling the AdSourcing tool.</p>
+      <span class="label">Agent Result</span>
+      <strong>Waiting for orchestration evidence.</strong>
+      <p>Start a sponsorship flow to record agent actions, tool calls, settlement, and proof.</p>
     `;
     return;
   }
@@ -579,7 +579,7 @@ function renderRunState(runState, theater, badcase) {
   if (runState.mode?.startsWith('two-agent-theater') && theaterSnapshot?.events?.length) {
     const latest = theaterSnapshot.events[theaterSnapshot.events.length - 1];
     $('#openclaw-result').innerHTML = `
-      <span class="label">Two-Agent POV Result</span>
+      <span class="label">Agent Sponsorship Result</span>
       <strong>${escapeHtml(theaterSnapshot.status || runState.status)} | escrow ${escapeHtml(theaterSnapshot.escrow?.id ?? 'n/a')} | ${money(theaterSnapshot.escrow?.amountUsdc)}</strong>
       <p>${escapeHtml(latest?.detail || 'Sponsor and community agents completed their visible workflow.')}</p>
       <pre>${escapeHtml([
@@ -605,16 +605,16 @@ function renderRunState(runState, theater, badcase) {
       </div>
     ` : '';
     $('#openclaw-result').innerHTML = `
-      <span class="label">OpenClaw Agent Result</span>
+      <span class="label">OpenClaw Orchestration Result</span>
       <strong>${escapeHtml(result.provider || 'provider')}/${escapeHtml(result.model || 'model')} | ${result.toolSummary?.calls || 0} tool call${result.toolSummary?.calls === 1 ? '' : 's'} | ${result.toolSummary?.failures || 0} failures</strong>
       ${evidenceBlock}
       <pre>${escapeHtml(result.text)}</pre>
     `;
   } else {
     $('#openclaw-result').innerHTML = `
-      <span class="label">OpenClaw Agent Result</span>
+      <span class="label">Agent Result</span>
       <strong>${escapeHtml(runState.model || runState.mode || 'Agent run')} | ${escapeHtml(runState.status || 'unknown')}</strong>
-      <p>${running ? 'OpenClaw is running. Keep this page on screen while you record.' : 'No OpenClaw final summary captured for this run.'}</p>
+      <p>${running ? 'Agent orchestration is running. Evidence will appear here as the protocol advances.' : 'No final orchestration summary captured for this run.'}</p>
     `;
   }
 }
@@ -635,10 +635,10 @@ function renderLiveReplay(runState) {
     replay.innerHTML = `
       <div class="replay-head">
         <div>
-          <span class="label">Animated Agent Replay</span>
-          <strong>No run events yet.</strong>
+          <span class="label">Agent Execution</span>
+          <strong>No protocol events yet.</strong>
         </div>
-        <p>Pick <b>Two-Agent POV</b> for the clearest demo. The replay will animate from real log lines, then the audit log stays available underneath.</p>
+        <p>Start the sponsorship flow to watch SponsorAgent, CommunityAgent, policy gates, escrow, and settlement progress from real event logs.</p>
       </div>
       <div class="mode-cheatsheet">
         ${demoModes().map(renderModeCard).join('')}
@@ -651,7 +651,7 @@ function renderLiveReplay(runState) {
   replay.innerHTML = `
     <div class="replay-head">
       <div>
-        <span class="label">Animated Agent Replay</span>
+        <span class="label">Agent Execution</span>
         <strong>${escapeHtml(modeInfo.title)} ${running ? 'is running' : completed ? 'completed' : failed ? 'failed' : 'ready'}</strong>
       </div>
       <p>${escapeHtml(modeInfo.bestFor)}</p>
@@ -796,37 +796,37 @@ function prettyToolName(toolName = '') {
 
 function demoModes() {
   return [
-    ['Two-Agent POV', 'Best pitch recording', 'Shows each autonomous agent action one by one.'],
-    ['OpenClaw Duel', 'Strongest OpenClaw proof', 'Two OpenClaw roles alternate sponsor/community tool calls.'],
-    ['Rejection Case', 'Guardrail proof', 'Shows the system refusing unsafe inventory before money moves.'],
-    ['OpenClaw + GLM', 'Agenthon proof', 'Shows OpenClaw/GLM invoking the tool, then summarizing receipts.'],
-    ['GLM + Discord', 'Real delivery proof', 'Same as OpenClaw GLM, with Discord API delivery when env is set.'],
-    ['Full Local Stack', 'Backend audit', 'Raw contract/receipt path for technical Q&A.'],
-    ['Full Discord Stack', 'Backend plus Discord', 'Raw stack with Discord bot delivery, less theatrical than POV.'],
+    ['Sponsorship Flow', 'Primary path', 'Shows each autonomous agent action from mandate to receipt.'],
+    ['OpenClaw Orchestration', 'Tool proof', 'Two OpenClaw roles alternate sponsor/community tool calls.'],
+    ['Policy Rejection', 'Risk proof', 'Shows unsafe sponsorship stopped before funds move.'],
+    ['OpenClaw + GLM', 'Agent runtime', 'Shows OpenClaw/GLM invoking tools and summarizing receipts.'],
+    ['GLM + Discord', 'Delivery proof', 'Uses Discord API delivery when env is set.'],
+    ['Local Protocol Stack', 'Technical review', 'Contracts, escrow, proof, and payment receipts.'],
+    ['Protocol + Discord', 'Integrated path', 'Protocol service stack with Discord bot delivery.'],
   ];
 }
 
 function demoModeInfo(mode = '') {
   const normalized = String(mode || '');
   if (normalized.startsWith('openclaw-duel')) {
-    return { title: 'OpenClaw Duel', bestFor: 'Strongest OpenClaw demo: separate Sponsor and Community OpenClaw sessions alternate the real step tools.' };
+    return { title: 'OpenClaw Orchestration', bestFor: 'Separate Sponsor and Community OpenClaw sessions alternate the real protocol tools.' };
   }
   if (normalized.startsWith('two-agent-theater')) {
-    return { title: 'Two-Agent POV', bestFor: 'Best for the judge-facing demo because it exposes both agents as actors, not just a backend script.' };
+    return { title: 'Sponsorship Flow', bestFor: 'Shows both agents as actors in the transaction: identity, negotiation, escrow, delivery, and settlement.' };
   }
   if (normalized === 'guardrail-rejection') {
-    return { title: 'Rejection Case', bestFor: 'Use this after the happy path to prove the agent is constrained and will not fund unsafe deals.' };
+    return { title: 'Policy Rejection', bestFor: 'Proves the agent is constrained and will not fund unsafe sponsorships.' };
   }
   if (normalized.startsWith('openclaw-llm') || normalized.startsWith('openclaw-gemini')) {
-    return { title: normalized.includes('discord') ? 'GLM + Discord' : 'OpenClaw + GLM', bestFor: 'Use this to prove an OpenClaw LLM turn is driving the AdSourcing tool instead of the dashboard faking the result.' };
+    return { title: normalized.includes('discord') ? 'GLM + Discord' : 'OpenClaw + GLM', bestFor: 'Proves an OpenClaw LLM turn is driving the AdSourcing protocol tool.' };
   }
   if (normalized.includes('discord')) {
-    return { title: 'Full Discord Stack', bestFor: 'Use this when the Discord bot env is configured and you want real message delivery on screen.' };
+    return { title: 'Protocol + Discord', bestFor: 'Use this when Discord bot env is configured and you want real message delivery on screen.' };
   }
   if (normalized.includes('local')) {
-    return { title: 'Full Local Stack', bestFor: 'Use this as the technical audit run: local chain, contracts, escrow, proof, and receipts.' };
+    return { title: 'Local Protocol Stack', bestFor: 'Local chain, contracts, escrow, proof, and receipts for technical review.' };
   }
-  return { title: 'AdSourcing run', bestFor: 'Pick Two-Agent POV for theater, OpenClaw for agenthon proof, and Local Stack for debugging.' };
+  return { title: 'AdSourcing Protocol', bestFor: 'Use Sponsorship Flow for the product story, OpenClaw for agent proof, and Local Protocol Stack for technical review.' };
 }
 
 function renderModeCard([title, tag, detail]) {
