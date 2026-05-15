@@ -6,13 +6,17 @@
 
 AdSourcing lets `SponsorAgent` and `CommunityAgent` run a sponsorship workflow from mandate, DOKU sponsor top-up evidence, identity checks, negotiation, escrow, Discord delivery proof, settlement, payment receipt, and agent memory.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-theneuralabs.cloud-0b6bcb)](https://theneuralabs.cloud/)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6)
-![Solidity](https://img.shields.io/badge/Solidity-Hardhat-363636)
-![OpenClaw](https://img.shields.io/badge/OpenClaw-Agent_Tools-111827)
-![DOKU](https://img.shields.io/badge/DOKU-Sandbox_Prefund-0f766e)
-![Discord](https://img.shields.io/badge/Discord-Delivery_Proof-5865f2)
-![Mem9](https://img.shields.io/badge/Mem9-Agent_Memory-7c3aed)
+<p>
+  <a href="https://theneuralabs.cloud/">
+    <img alt="Live Demo" src="https://img.shields.io/badge/Live_Demo-theneuralabs.cloud-0b6bcb">
+  </a>
+  <img alt="TypeScript 5.x" src="https://img.shields.io/badge/TypeScript-5.x-3178c6">
+  <img alt="Solidity Hardhat" src="https://img.shields.io/badge/Solidity-Hardhat-363636">
+  <img alt="OpenClaw Agent Tools" src="https://img.shields.io/badge/OpenClaw-Agent_Tools-111827">
+  <img alt="DOKU Sandbox Prefund" src="https://img.shields.io/badge/DOKU-Sandbox_Prefund-0f766e">
+  <img alt="Discord Delivery Proof" src="https://img.shields.io/badge/Discord-Delivery_Proof-5865f2">
+  <img alt="Mem9 Agent Memory" src="https://img.shields.io/badge/Mem9-Agent_Memory-7c3aed">
+</p>
 
 `DOKU top-up -> SponsorAgent -> ERC-8004-style identity -> Policy gates -> Negotiation -> Local USDC escrow -> Discord delivery proof -> Payment receipt -> Agent memory`
 
