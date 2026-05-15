@@ -1,17 +1,31 @@
+import axios from 'axios';
+
 export class ReplizService {
   private accessKey = process.env.REPLIZ_KEY;
 
   async monitorPostEngagement(platform: string, postId: string): Promise<void> {
-    if (!this.accessKey) return;
+    if (!this.accessKey) {
+      console.warn(`[Repliz] Skipped. REPLIZ_KEY not found in environment.`);
+      return;
+    }
     
     try {
       console.log(`[Repliz] Initiating social media monitoring for ${platform} post: ${postId}`);
-      await new Promise(r => setTimeout(r, 400));
-      // In production, this hits the Repliz Public API
-      // await axios.post('https://api.repliz.com/v1/monitor', { platform, postId }, { headers: { Authorization: `Bearer ${this.accessKey}` }});
-      console.log(`[Repliz] Successfully hooked into post. Ready to manage comments and engagement automatically.`);
-    } catch (err) {
-      console.warn(`[Repliz] Failed to monitor post:`, err);
+      // Send real network request to Repliz API. Will throw if invalid.
+      const response = await axios.post(
+        'https://api.repliz.com/v1/monitor', 
+        { platform, postId }, 
+        { 
+          headers: { Authorization: `Bearer ${this.accessKey}` },
+          timeout: 5000
+        }
+      );
+      console.log(`[Repliz] Successfully hooked into post (Status: ${response.status}). Ready to manage comments and engagement automatically.`);
+    } catch (err: any) {
+      console.warn(`[Repliz] Failed to monitor post. This is a real network failure: ${err.message}`);
+      throw err; // Strict crash as requested
+    }
+  }
     }
   }
 }
