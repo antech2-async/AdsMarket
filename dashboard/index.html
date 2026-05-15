@@ -1,117 +1,201 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AdMarket Deal Flight Recorder</title>
+    <title>AdSourcing | Agentic Sponsorship Protocol</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">AdMarket Autonomous Market</p>
-          <h1>Deal Flight Recorder</h1>
-          <p class="topline">Replay the agent-to-agent deal: decision, policy, payment, proof.</p>
-        </div>
-        <div class="top-actions">
-          <button id="playback" type="button" title="Play phase replay">Play</button>
-          <button id="refresh" type="button" title="Refresh cockpit">Refresh</button>
-        </div>
-      </header>
-
-      <section class="stage-shell" aria-label="Protocol state theater">
-        <div class="stage-copy">
-          <p class="eyebrow">Replay Lens</p>
-          <h2 id="stage-title">Loading Deal</h2>
-          <p id="stage-summary">Loading signed deal evidence and policy trail.</p>
-          <div class="stage-proof">
-            <span class="label">Selected Evidence</span>
-            <strong id="stage-evidence">Awaiting proof bundle</strong>
+        <div class="brand-lockup">
+          <span class="brand-mark">AS</span>
+          <div>
+            <p class="eyebrow">Agentic Sponsorship Protocol</p>
+            <h1>AdSourcing</h1>
           </div>
         </div>
+        <nav class="top-actions" aria-label="Workspace actions">
+          <button id="refresh" type="button" title="Perbarui workspace">Perbarui</button>
+          <button id="playback" type="button" title="Play phase replay">Play</button>
+        </nav>
+      </header>
 
-        <div class="flow-board" aria-label="Agent-to-agent deal flow">
+      <section class="hero-grid" aria-label="AdSourcing sponsorship workspace">
+        <article class="hero-copy">
+          <p class="eyebrow">Ruang Kerja Sponsorship Komunitas</p>
+          <h2>Agent untuk menjalankan sponsorship komunitas dengan payment dan proof yang aman.</h2>
+          <p class="hero-lede">
+            SponsorAgent dan CommunityAgent menegosiasikan placement, memverifikasi identity,
+            mengunci dana di escrow, lalu menyelesaikan payment setelah delivery proof tersedia.
+          </p>
+          <div class="trust-pills" aria-label="Protocol capabilities">
+            <span>ERC-8004-style Identity</span>
+            <span>Policy Gates</span>
+            <span>USDC Escrow</span>
+            <span>Payment Receipt</span>
+          </div>
+          <div class="hero-actions">
+            <button id="run-two-agent-theater" class="primary-action" type="button">
+              <strong>Mulai Negosiasi Agent</strong>
+              <span>Jalankan alur SponsorAgent dan CommunityAgent dari mandate sampai payment receipt.</span>
+            </button>
+            <button id="run-badcase" class="secondary-action danger" type="button">
+              <strong>Uji Konten Berisiko</strong>
+              <span>Buktikan sponsorship berisiko berhenti sebelum escrow.</span>
+            </button>
+          </div>
+        </article>
+
+        <section class="deal-room" aria-label="Live sponsorship deal room">
           <article class="party-terminal sponsor-terminal">
-            <span class="label">Sponsor Agent</span>
+            <span class="label">Sponsor</span>
             <strong id="flow-sponsor-title">Budget mandate</strong>
-            <p id="flow-sponsor-detail">Waiting for sponsor state.</p>
+            <p id="flow-sponsor-detail">Menunggu state sponsor.</p>
             <div id="flow-sponsor-facts" class="fact-grid"></div>
           </article>
 
           <div class="flow-center">
             <div id="flow-motion" class="flow-motion" aria-label="Live deal movement"></div>
             <div id="flow-route" class="flow-route"></div>
-            <div id="flow-steps" class="flow-steps"></div>
           </div>
 
           <article class="party-terminal community-terminal">
-            <span class="label">Community Agent</span>
+            <span class="label">Komunitas</span>
             <strong id="flow-community-title">Inventory mandate</strong>
-            <p id="flow-community-detail">Waiting for community state.</p>
+            <p id="flow-community-detail">Menunggu state komunitas.</p>
             <div id="flow-community-facts" class="fact-grid"></div>
           </article>
-        </div>
-
-        <div class="stage-inspector" id="object-inspector">
-          <span class="label">Selected Node</span>
-          <strong>Sponsor Agent</strong>
-          <p>Click a node, gate, packet, or phase to inspect what it proves.</p>
-        </div>
-        <div class="phase-rail" id="phase-rail" aria-label="Deal phase rail"></div>
+        </section>
       </section>
 
-      <section class="metrics" aria-label="System metrics">
+      <section class="metrics" aria-label="Protocol metrics">
         <button class="metric metric-button" data-view="deal" type="button">
-          <span class="metric-label">Deals Recorded</span>
+          <span class="metric-label">Deal State</span>
           <strong id="metric-deals">0</strong>
-          <span class="metric-hint">Open deal transcript</span>
+          <span class="metric-hint">State transaksi tersimpan</span>
         </button>
         <button class="metric metric-button" data-view="policy" type="button">
-          <span class="metric-label">Policy Verdicts</span>
+          <span class="metric-label">Policy Checks</span>
           <strong id="metric-checks">0</strong>
-          <span class="metric-hint">Inspect guardrails</span>
+          <span class="metric-hint">Identity, reputation, content</span>
         </button>
         <button class="metric metric-button" data-view="proof" type="button">
-          <span class="metric-label">Evidence Receipts</span>
+          <span class="metric-label">Proof Bundle</span>
           <strong id="metric-proofs">0</strong>
           <span class="metric-hint" id="metric-payments">0 payment receipts</span>
         </button>
         <button class="metric metric-button" data-view="redteam" type="button">
-          <span class="metric-label">Red-Team</span>
+          <span class="metric-label">Tinjauan Risiko</span>
           <strong id="metric-redteam">n/a</strong>
-          <span class="metric-hint">Show attack score</span>
+          <span class="metric-hint">Konten berisiko ditahan</span>
         </button>
       </section>
 
-      <section class="registry-panel" aria-label="Live agent identity and settlement registry">
-        <div class="panel-head">
+      <section class="workflow-panel" aria-label="Agent workflow">
+        <div class="section-head">
           <div>
-            <p class="eyebrow">ERC-8004 Accountability Layer</p>
-            <h2>Identity, reputation, and receipts come from the run state.</h2>
+            <p class="eyebrow">Alur Agent</p>
+            <h2 id="stage-title">Loading Deal</h2>
+            <p id="stage-summary">Loading signed deal evidence and policy trail.</p>
           </div>
-          <span id="registry-status">waiting for agent run</span>
+          <div class="stage-proof">
+            <span class="label">Bukti Terpilih</span>
+            <strong id="stage-evidence">Menunggu proof bundle</strong>
+          </div>
+        </div>
+        <div id="flow-steps" class="flow-steps"></div>
+        <div class="phase-rail" id="phase-rail" aria-label="Deal phase rail"></div>
+        <div class="stage-inspector" id="object-inspector">
+          <span class="label">Selected Node</span>
+          <strong>Sponsor Agent</strong>
+          <p>Select a node, gate, packet, or phase to inspect what it proves.</p>
+        </div>
+      </section>
+
+      <section class="narrative-panel" aria-label="Sponsorship settlement summary">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Ringkasan Payment</p>
+            <h2 id="narrative-headline">Belum ada transaksi selesai.</h2>
+          </div>
+          <span id="narrative-mode">Tampilan agent</span>
+        </div>
+        <div class="narrative-grid">
+          <article>
+            <span class="label">Sponsor</span>
+            <strong id="story-sponsor">Menunggu</strong>
+            <p id="story-sponsor-detail">The funder sets budget and ad copy.</p>
+          </article>
+          <article>
+            <span class="label">Community</span>
+            <strong id="story-community">Menunggu</strong>
+            <p id="story-community-detail">The community sets floor price and content rules.</p>
+          </article>
+          <article>
+            <span class="label">Escrow</span>
+            <strong id="story-escrow">Menunggu</strong>
+            <p id="story-escrow-detail">Funds lock before delivery and settle after proof.</p>
+          </article>
+          <article>
+            <span class="label">Proof</span>
+            <strong id="story-proof">Menunggu</strong>
+            <p id="story-proof-detail">Receipts preserve why the agents acted.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="registry-panel" aria-label="Live agent identity and settlement registry">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Bukti Protocol</p>
+            <h2>Agent identity, reputation, dan payment record.</h2>
+          </div>
+          <span id="registry-status">menunggu agent run</span>
         </div>
         <div id="registry-agent-grid" class="registry-grid"></div>
         <div class="registry-subhead">
-          <span class="label">Settlement Evidence</span>
+          <span class="label">Bukti Settlement</span>
           <strong id="registry-source">No settled escrow selected.</strong>
         </div>
         <div id="registry-evidence-grid" class="evidence-grid"></div>
       </section>
 
-      <section class="mandate-panel" aria-label="Agent mandate setup">
-        <div class="panel-head">
+      <section class="pov-panel" aria-label="Two user agent point of view">
+        <div class="section-head">
           <div>
-            <p class="eyebrow">One-Time Agent Setup</p>
-            <h2>Each user gives their agent a mandate, then the agents do the rest.</h2>
+            <p class="eyebrow">Keputusan Agent</p>
+            <h2>Sponsor dan community melihat agent yang berbeda, bukan satu admin console.</h2>
           </div>
-          <button id="save-mandates" type="button">Save Mandates</button>
+          <span id="pov-mode">menunggu</span>
+        </div>
+        <div class="pov-grid">
+          <article class="pov-card sponsor-pov">
+            <span class="label">Sponsor User</span>
+            <strong>Membeli placement komunitas yang lolos kualifikasi</strong>
+            <div id="sponsor-pov" class="pov-chat"></div>
+          </article>
+          <article class="pov-card community-pov">
+            <span class="label">Community Owner</span>
+            <strong>Menjual satu slot tanpa negosiasi manual</strong>
+            <div id="community-pov" class="pov-chat"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="mandate-panel" aria-label="Agent mandate setup">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Mandate Builder</p>
+            <h2>User menentukan batasan sekali. Agent mengeksekusi di dalam batas itu.</h2>
+          </div>
+          <button id="save-mandates" type="button">Simpan Mandate</button>
         </div>
         <div class="mandate-grid">
           <article class="mandate-card sponsor-setup">
-            <span class="label">Sponsor User → Sponsor Agent</span>
-            <strong>Buy a qualified community post</strong>
+            <span class="label">Sponsor User -> SponsorAgent</span>
+            <strong>Membeli placement komunitas yang lolos kualifikasi</strong>
             <div class="mandate-fields">
               <label>Campaign <input id="sponsor-campaign" type="text"></label>
               <label>Total budget USDC <input id="sponsor-budget" type="number" min="1" step="1"></label>
@@ -123,8 +207,8 @@
             </div>
           </article>
           <article class="mandate-card community-setup">
-            <span class="label">Community Owner → Community Agent</span>
-            <strong>Sell one safe ad slot without manual negotiation</strong>
+            <span class="label">Community Owner -> CommunityAgent</span>
+            <strong>Menjual satu slot aman tanpa negosiasi manual</strong>
             <div class="mandate-fields">
               <label>Platform
                 <select id="community-platform">
@@ -143,150 +227,90 @@
           </article>
         </div>
         <div class="intake-sim" aria-label="OpenClaw chat intake simulator">
-          <div class="panel-head">
+          <div class="section-head">
             <div>
-              <p class="eyebrow">OpenClaw Intake Simulation</p>
-              <h2>Two users talk once. OpenClaw extracts the mandate and waits for a counterparty.</h2>
+              <p class="eyebrow">Conversational Intake</p>
+              <h2>OpenClaw membaca mandate sponsor dan komunitas dari percakapan natural.</h2>
             </div>
-            <button id="save-chat-mandates" type="button">Save Chat Mandates</button>
+            <button id="save-chat-mandates" type="button">Simpan dari Chat</button>
           </div>
           <div class="intake-grid">
             <article class="intake-card sponsor-intake">
-              <span class="label">Sponsor Discord DM</span>
+              <span class="label">Sponsor DM</span>
               <strong>@SponsorOpenClaw</strong>
               <div id="sponsor-intake-log" class="intake-log"></div>
               <div class="intake-compose">
                 <textarea id="sponsor-intake-input" rows="3" placeholder="Example: I want to sponsor AI infra communities. Budget 500 USDC, max 31/post. No gambling or scams. Ad copy: ..."></textarea>
-                <button id="sponsor-intake-send" type="button">Send</button>
+                <button id="sponsor-intake-send" type="button">Kirim</button>
               </div>
             </article>
             <article class="intake-card community-intake">
-              <span class="label">Community Discord DM</span>
+              <span class="label">Community DM</span>
               <strong>@CommunityOpenClaw</strong>
               <div id="community-intake-log" class="intake-log"></div>
               <div class="intake-compose">
                 <textarea id="community-intake-input" rows="3" placeholder="Example: I run a 900-member Discord. Floor 24 USDC, max 2 ads/day. No gambling, no scams."></textarea>
-                <button id="community-intake-send" type="button">Send</button>
+                <button id="community-intake-send" type="button">Kirim</button>
               </div>
             </article>
           </div>
         </div>
-        <p id="mandate-save-status" class="mandate-status">Saved mandates are used by OpenClaw Duel, OpenClaw + GLM, Two-Agent POV, and local stack runs.</p>
+        <p id="mandate-save-status" class="mandate-status">Mandate yang tersimpan dipakai untuk negosiasi agent, OpenClaw orchestration, dan local protocol run.</p>
       </section>
 
-      <section class="run-panel" aria-label="Run Agenthon local demo">
-        <div>
-          <p class="eyebrow">Live Agent Run</p>
-          <h2>Run The Full Local Deal</h2>
-          <p>Deploy local contracts, mint local USDC, register both agents, negotiate, escrow, deliver, settle, and write receipts.</p>
+      <section class="run-panel" aria-label="Protocol operations">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Protocol Operations</p>
+            <h2>Jalur eksekusi untuk review teknikal.</h2>
+            <p>Gunakan bagian ini saat judge ingin melihat bagaimana OpenClaw, Discord delivery, contract, dan protocol service terhubung.</p>
+          </div>
         </div>
         <div class="run-actions">
-          <button id="run-two-agent-theater" class="run-choice" type="button">
-            <strong>Two-Agent POV</strong>
-            <span>Best recording path: step-by-step sponsor/community actions.</span>
-          </button>
           <button id="run-openclaw-duel" class="run-choice" type="button">
-            <strong>OpenClaw Duel</strong>
-            <span>Two OpenClaw roles alternate the real sponsor/community tools.</span>
-          </button>
-          <button id="run-badcase" class="run-choice" type="button">
-            <strong>Rejection Case</strong>
-            <span>Shows guardrails blocking a bad ad before escrow.</span>
+            <strong>OpenClaw Tool Orchestration</strong>
+            <span>Dua role OpenClaw menjalankan tool sponsor dan komunitas secara bergantian.</span>
           </button>
           <button id="run-openclaw-gemini" class="run-choice" type="button">
             <strong>OpenClaw + GLM</strong>
-            <span>Real OpenClaw LLM agent calls the AdSourcing tool.</span>
+            <span>LLM agent calls the AdSourcing tool and summarizes receipts.</span>
           </button>
           <button id="run-openclaw-discord" class="run-choice" type="button">
-            <strong>GLM + Discord</strong>
-            <span>Same OpenClaw LLM run, but delivery uses Discord env.</span>
+            <strong>GLM + Discord Delivery</strong>
+            <span>Same LLM path, with Discord delivery when env is configured.</span>
           </button>
           <button id="run-agenthon" class="run-choice" type="button">
-            <strong>Full Local Stack</strong>
-            <span>Raw backend path: contracts, agents, escrow, receipts.</span>
+            <strong>Local Protocol Stack</strong>
+            <span>Contracts, agents, escrow, delivery, receipts.</span>
           </button>
           <button id="run-agenthon-discord" class="run-choice" type="button">
-            <strong>Full Discord Stack</strong>
-            <span>Raw backend path with real Discord bot delivery.</span>
+            <strong>Protocol + Discord Stack</strong>
+            <span>Protocol service path with Discord bot delivery.</span>
           </button>
         </div>
         <div id="live-replay" class="live-replay" aria-label="Animated run replay"></div>
         <div id="openclaw-result" class="openclaw-result">
-          <span class="label">OpenClaw Agent Result</span>
-          <strong>Waiting for a live OpenClaw run.</strong>
-          <p>Click "Run OpenClaw + Gemini 3" to record the LLM agent calling the AdSourcing tool.</p>
+          <span class="label">Agent Result</span>
+          <strong>Menunggu orchestration run.</strong>
+          <p>Mulai alur sponsorship untuk merekam agent action dan settlement evidence.</p>
         </div>
         <details class="audit-drawer">
-          <summary>Technical audit log</summary>
-          <pre id="run-log" class="run-log">No run started from this dashboard yet.</pre>
+          <summary>Protocol execution log</summary>
+          <pre id="run-log" class="run-log">Belum ada protocol run dari workspace ini.</pre>
         </details>
-      </section>
-
-      <section class="narrative-panel" aria-label="Human-readable deal narrative">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Deal Narrative</p>
-            <h2 id="narrative-headline">No completed transaction selected.</h2>
-          </div>
-          <span id="narrative-mode">Agent view</span>
-        </div>
-        <div class="narrative-grid">
-          <article>
-            <span class="label">Sponsor / Advertiser</span>
-            <strong id="story-sponsor">Waiting</strong>
-            <p id="story-sponsor-detail">The funder sets budget and ad copy.</p>
-          </article>
-          <article>
-            <span class="label">Community / Discord Owner</span>
-            <strong id="story-community">Waiting</strong>
-            <p id="story-community-detail">The community sets floor price and content rules.</p>
-          </article>
-          <article>
-            <span class="label">Escrow</span>
-            <strong id="story-escrow">Waiting</strong>
-            <p id="story-escrow-detail">Funds lock before delivery and settle after proof.</p>
-          </article>
-          <article>
-            <span class="label">Proof</span>
-            <strong id="story-proof">Waiting</strong>
-            <p id="story-proof-detail">Receipts preserve why the agents acted.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="pov-panel" aria-label="Two user agent point of view">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Two User POV</p>
-            <h2>Sponsor and community see different agents, not one admin console.</h2>
-          </div>
-          <span id="pov-mode">waiting</span>
-        </div>
-        <div class="pov-grid">
-          <article class="pov-card sponsor-pov">
-            <span class="label">Sponsor User</span>
-            <strong>Buy a qualified community post</strong>
-            <div id="sponsor-pov" class="pov-chat"></div>
-          </article>
-          <article class="pov-card community-pov">
-            <span class="label">Community Owner</span>
-            <strong>Sell one ad slot without manual negotiation</strong>
-            <div id="community-pov" class="pov-chat"></div>
-          </article>
-        </div>
       </section>
 
       <section class="layout">
         <div class="panel inspector-panel" data-panel="deal">
-          <div class="panel-head">
-            <h2>Deals</h2>
+          <div class="section-head compact">
+            <h2>Sponsorship Deals</h2>
             <span id="updated-at"></span>
           </div>
           <div id="deals" class="deal-list"></div>
         </div>
 
         <aside class="panel inspector-panel" data-panel="proof">
-          <div class="panel-head">
+          <div class="section-head compact">
             <h2>Proof + Payment Receipts</h2>
           </div>
           <div id="proofs" class="proof-list"></div>
@@ -294,15 +318,15 @@
         </aside>
 
         <div class="panel inspector-panel" data-panel="policy">
-          <div class="panel-head">
+          <div class="section-head compact">
             <h2>Policy Trail</h2>
           </div>
           <div id="policy-trail" class="policy-grid"></div>
         </div>
 
         <aside class="panel inspector-panel" data-panel="redteam">
-          <div class="panel-head">
-            <h2>Red-Team</h2>
+          <div class="section-head compact">
+            <h2>Risk Review</h2>
           </div>
           <div id="redteam" class="redteam-card"></div>
         </aside>

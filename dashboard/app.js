@@ -78,13 +78,13 @@ let playbackTimer = null;
 const intakeState = {
   sponsor: {
     messages: [
-      ['agent', 'Tell me what you want in plain language. If you give budget and max price, I can infer the rest with safe defaults and ask only one follow-up if something critical is missing.'],
+      ['agent', 'Ceritakan kebutuhan sponsorship kamu dengan bahasa natural. Kalau budget dan max price sudah jelas, aku bisa melengkapi sisanya dengan default yang aman.'],
     ],
     parsed: {},
   },
   community: {
     messages: [
-      ['agent', 'Tell me what inventory you are willing to sell. If you give a floor price, I can use safe defaults for score, rules, and cadence unless you override them.'],
+      ['agent', 'Ceritakan slot komunitas yang mau dijual. Kalau floor price sudah jelas, aku bisa memakai default aman untuk score, rules, dan cadence.'],
     ],
     parsed: {},
   },
@@ -104,7 +104,7 @@ function allChecks(deal) {
 
 function renderChecks(deal) {
   const checks = allChecks(deal).slice(-8);
-  if (!checks.length) return '<p class="empty">No policy evidence yet.</p>';
+  if (!checks.length) return '<p class="empty">Belum ada policy evidence.</p>';
 
   return `<div class="checks">${checks.map((check) => `
     <div class="check ${check.passed ? '' : 'failed'}">
@@ -128,7 +128,7 @@ function renderReceipts(deal) {
 }
 
 function renderDeals(deals) {
-  if (!deals.length) return '<p class="empty">No deal state found. Run npm run demo to populate the cockpit.</p>';
+  if (!deals.length) return '<p class="empty">Belum ada sponsorship deal. Mulai alur sponsorship untuk membuat protocol state pertama.</p>';
 
   return deals.map((deal) => `
     <article class="deal">
@@ -151,7 +151,7 @@ function renderDeals(deals) {
 }
 
 function renderProofs(proofs) {
-  if (!proofs.length) return '<p class="empty">No proof bundles found.</p>';
+  if (!proofs.length) return '<p class="empty">Belum ada proof bundle.</p>';
 
   return proofs.slice(0, 8).map((proof) => `
     <div class="proof-row">
@@ -165,7 +165,7 @@ function renderProofs(proofs) {
 }
 
 function renderPayments(payments) {
-  if (!payments.length) return '<p class="empty">No payment receipts found.</p>';
+  if (!payments.length) return '<p class="empty">Belum ada payment receipt.</p>';
 
   return payments.slice(0, 8).map((payment) => `
     <div class="proof-row payment-row">
@@ -181,7 +181,7 @@ function renderPayments(payments) {
 
 function renderPolicyTrail(deals) {
   const checks = deals.flatMap((deal) => allChecks(deal).map((check) => ({ ...check, dealId: deal.dealId })));
-  if (!checks.length) return '<p class="empty">No policy trail yet.</p>';
+  if (!checks.length) return '<p class="empty">Belum ada policy trail.</p>';
 
   return checks.slice(-14).reverse().map((check) => `
     <div class="policy-card">
@@ -196,7 +196,7 @@ function renderPolicyTrail(deals) {
 }
 
 function renderRedteam(redteam) {
-  if (!redteam) return '<p class="empty">Run npm run redteam to populate adversarial eval results.</p>';
+  if (!redteam) return '<p class="empty">Belum ada risk review. Jalankan uji konten berisiko untuk melihat hasilnya.</p>';
   return `
     <div class="redteam-score">${redteam.passed}/${redteam.total}</div>
     <p class="label">Last run ${formatTime(redteam.generatedAt)}</p>
@@ -210,6 +210,26 @@ function latestByTime(items = []) {
 
 function firstDefined(...values) {
   return values.find((value) => value !== undefined && value !== null && value !== '');
+}
+
+function sponsorDisplayName(data = {}, theater = {}) {
+  const mandate = data?.mandates?.sponsor?.mandate || {};
+  const name = mandate.campaignName || theater.sponsor?.name || 'OpenClaw Sponsor Campaign';
+  return /two-agent theater/i.test(name) ? 'OpenClaw Sponsor' : name;
+}
+
+function communityDisplayName(data = {}, theater = {}) {
+  const mandate = data?.mandates?.community?.mandate || {};
+  if (mandate.communityName) return mandate.communityName;
+  const platform = mandate.platform || theater.community?.platform || 'Discord';
+  return platform === 'telegram' ? 'Telegram Builder Community' : 'AI Builders Indonesia';
+}
+
+function sponsoredPostCopy(rawCopy = '') {
+  if (!rawCopy || /two-agent theater/i.test(rawCopy)) {
+    return 'Build with autonomous agent infra. Sponsored placement verified with escrow and proof.';
+  }
+  return rawCopy;
 }
 
 function renderRegistry(data) {
@@ -267,7 +287,7 @@ function renderRegistry(data) {
     ['DOKU rail', dokuState],
     ['DOKU invoice', doku.lastInvoiceNumber || 'n/a'],
   ];
-  const chainLabel = chain.name ? chain.name + (chain.chainId ? ' / chain ' + chain.chainId : '') : 'VPS private ERC-8004-compatible demo chain';
+  const chainLabel = chain.name ? chain.name + (chain.chainId ? ' / chain ' + chain.chainId : '') : 'Local ERC-8004-compatible protocol chain';
   $('#registry-source').textContent = chainLabel + ' | ' + mem9State;
   $('#registry-evidence-grid').innerHTML = evidence.map(([label, value]) => [
     '<article class="evidence-tile">',
@@ -527,7 +547,7 @@ async function saveMandates() {
   const button = $('#save-mandates');
   const status = $('#mandate-save-status');
   button.disabled = true;
-  status.textContent = 'Saving mandates for both agents...';
+  status.textContent = 'Menyimpan mandate untuk kedua agent...';
   try {
     const response = await fetch('/api/mandates', {
       method: 'POST',
@@ -536,10 +556,10 @@ async function saveMandates() {
     });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.error || 'Failed to save mandates');
-    status.textContent = 'Mandates saved. The next agent run will use these budget, floor, score, and content rules.';
+    status.textContent = 'Mandate tersimpan. Agent run berikutnya akan memakai budget, floor, score, dan content rules ini.';
     await loadCockpit();
   } catch (error) {
-    status.textContent = `Could not save mandates: ${error.message}`;
+    status.textContent = `Mandate gagal disimpan: ${error.message}`;
   } finally {
     button.disabled = false;
   }
@@ -548,11 +568,11 @@ async function saveMandates() {
 function renderRunState(runState, theater, badcase) {
   if (!runState) {
     renderLiveReplay(null);
-    $('#run-log').textContent = 'No run started from this dashboard yet.';
+    $('#run-log').textContent = 'Belum ada protocol run dari workspace ini.';
     $('#openclaw-result').innerHTML = `
-      <span class="label">OpenClaw Agent Result</span>
-      <strong>Waiting for a live OpenClaw run.</strong>
-      <p>Click "OpenClaw + GLM" to record the LLM agent calling the AdSourcing tool.</p>
+      <span class="label">Agent Result</span>
+      <strong>Menunggu orchestration evidence.</strong>
+      <p>Mulai alur sponsorship untuk merekam agent action, tool call, settlement, dan proof.</p>
     `;
     return;
   }
@@ -591,9 +611,9 @@ function renderRunState(runState, theater, badcase) {
   if (runState.mode?.startsWith('two-agent-theater') && theaterSnapshot?.events?.length) {
     const latest = theaterSnapshot.events[theaterSnapshot.events.length - 1];
     $('#openclaw-result').innerHTML = `
-      <span class="label">Two-Agent POV Result</span>
+      <span class="label">Agent Sponsorship Result</span>
       <strong>${escapeHtml(theaterSnapshot.status || runState.status)} | escrow ${escapeHtml(theaterSnapshot.escrow?.id ?? 'n/a')} | ${money(theaterSnapshot.escrow?.amountUsdc)}</strong>
-      <p>${escapeHtml(latest?.detail || 'Sponsor and community agents completed their visible workflow.')}</p>
+      <p>${escapeHtml(latest?.detail || 'SponsorAgent dan CommunityAgent menyelesaikan workflow yang bisa diaudit.')}</p>
       <pre>${escapeHtml([
         `Sponsor: ${theaterSnapshot.sponsor?.wallet || 'n/a'}`,
         `Community: ${theaterSnapshot.community?.wallet || 'n/a'}`,
@@ -617,16 +637,16 @@ function renderRunState(runState, theater, badcase) {
       </div>
     ` : '';
     $('#openclaw-result').innerHTML = `
-      <span class="label">OpenClaw Agent Result</span>
+      <span class="label">OpenClaw Orchestration Result</span>
       <strong>${escapeHtml(result.provider || 'provider')}/${escapeHtml(result.model || 'model')} | ${result.toolSummary?.calls || 0} tool call${result.toolSummary?.calls === 1 ? '' : 's'} | ${result.toolSummary?.failures || 0} failures</strong>
       ${evidenceBlock}
       <pre>${escapeHtml(result.text)}</pre>
     `;
   } else {
     $('#openclaw-result').innerHTML = `
-      <span class="label">OpenClaw Agent Result</span>
+      <span class="label">Agent Result</span>
       <strong>${escapeHtml(runState.model || runState.mode || 'Agent run')} | ${escapeHtml(runState.status || 'unknown')}</strong>
-      <p>${running ? 'OpenClaw is running. Keep this page on screen while you record.' : 'No OpenClaw final summary captured for this run.'}</p>
+      <p>${running ? 'Agent orchestration sedang berjalan. Evidence akan muncul saat protocol bergerak.' : 'Belum ada final orchestration summary untuk run ini.'}</p>
     `;
   }
 }
@@ -647,10 +667,10 @@ function renderLiveReplay(runState) {
     replay.innerHTML = `
       <div class="replay-head">
         <div>
-          <span class="label">Animated Agent Replay</span>
-          <strong>No run events yet.</strong>
+          <span class="label">Agent Execution</span>
+          <strong>Belum ada protocol event.</strong>
         </div>
-        <p>Pick <b>Two-Agent POV</b> for the clearest demo. The replay will animate from real log lines, then the audit log stays available underneath.</p>
+        <p>Mulai alur sponsorship untuk melihat SponsorAgent, CommunityAgent, policy gates, escrow, dan payment progress dari event log.</p>
       </div>
       <div class="mode-cheatsheet">
         ${demoModes().map(renderModeCard).join('')}
@@ -663,8 +683,8 @@ function renderLiveReplay(runState) {
   replay.innerHTML = `
     <div class="replay-head">
       <div>
-        <span class="label">Animated Agent Replay</span>
-        <strong>${escapeHtml(modeInfo.title)} ${running ? 'is running' : completed ? 'completed' : failed ? 'failed' : 'ready'}</strong>
+        <span class="label">Agent Execution</span>
+        <strong>${escapeHtml(modeInfo.title)} ${running ? 'berjalan' : completed ? 'selesai' : failed ? 'gagal' : 'siap'}</strong>
       </div>
       <p>${escapeHtml(modeInfo.bestFor)}</p>
     </div>
@@ -677,7 +697,7 @@ function renderLiveReplay(runState) {
     <div class="packet-stage">
       <span class="packet-node sponsor-node">Sponsor</span>
       <span class="packet-line"></span>
-      <span class="packet ${actorClass(latest?.actor)}">${escapeHtml(latest?.action || 'ready')}</span>
+      <span class="packet ${actorClass(latest?.actor)}">${escapeHtml(latest?.action || 'siap')}</span>
       <span class="packet-node community-node">Community</span>
     </div>
     <div class="event-film">
@@ -693,7 +713,7 @@ function renderLane(title, actor, events) {
     <article class="agent-lane ${actorClass(actor)} ${active ? 'active' : ''}">
       <span>${escapeHtml(title)}</span>
       <strong>${count}</strong>
-      <p>${active ? 'acting now' : count ? 'participated' : 'waiting'}</p>
+      <p>${active ? 'sedang aktif' : count ? 'ikut memproses' : 'menunggu'}</p>
     </article>
   `;
 }
@@ -808,37 +828,37 @@ function prettyToolName(toolName = '') {
 
 function demoModes() {
   return [
-    ['Two-Agent POV', 'Best pitch recording', 'Shows each autonomous agent action one by one.'],
-    ['OpenClaw Duel', 'Strongest OpenClaw proof', 'Two OpenClaw roles alternate sponsor/community tool calls.'],
-    ['Rejection Case', 'Guardrail proof', 'Shows the system refusing unsafe inventory before money moves.'],
-    ['OpenClaw + GLM', 'Agenthon proof', 'Shows OpenClaw/GLM invoking the tool, then summarizing receipts.'],
-    ['GLM + Discord', 'Real delivery proof', 'Same as OpenClaw GLM, with Discord API delivery when env is set.'],
-    ['Full Local Stack', 'Backend audit', 'Raw contract/receipt path for technical Q&A.'],
-    ['Full Discord Stack', 'Backend plus Discord', 'Raw stack with Discord bot delivery, less theatrical than POV.'],
+    ['Sponsorship Flow', 'Primary path', 'Menampilkan aksi autonomous agent dari mandate sampai receipt.'],
+    ['OpenClaw Orchestration', 'Tool proof', 'Dua role OpenClaw menjalankan tool sponsor dan komunitas.'],
+    ['Policy Rejection', 'Risk proof', 'Menunjukkan sponsorship berisiko dihentikan sebelum dana bergerak.'],
+    ['OpenClaw + GLM', 'Agent runtime', 'OpenClaw/GLM memanggil tool dan merangkum receipt.'],
+    ['GLM + Discord', 'Delivery proof', 'Menggunakan Discord API delivery saat env tersedia.'],
+    ['Local Protocol Stack', 'Technical review', 'Contract, escrow, proof, dan payment receipt.'],
+    ['Protocol + Discord', 'Integrated path', 'Protocol service stack dengan Discord bot delivery.'],
   ];
 }
 
 function demoModeInfo(mode = '') {
   const normalized = String(mode || '');
   if (normalized.startsWith('openclaw-duel')) {
-    return { title: 'OpenClaw Duel', bestFor: 'Strongest OpenClaw demo: separate Sponsor and Community OpenClaw sessions alternate the real step tools.' };
+    return { title: 'OpenClaw Orchestration', bestFor: 'Sponsor dan Community session menjalankan protocol tools secara bergantian.' };
   }
   if (normalized.startsWith('two-agent-theater')) {
-    return { title: 'Two-Agent POV', bestFor: 'Best for the judge-facing demo because it exposes both agents as actors, not just a backend script.' };
+    return { title: 'Sponsorship Flow', bestFor: 'Dua agent terlihat sebagai aktor transaksi: identity, negotiation, escrow, delivery, dan payment.' };
   }
   if (normalized === 'guardrail-rejection') {
-    return { title: 'Rejection Case', bestFor: 'Use this after the happy path to prove the agent is constrained and will not fund unsafe deals.' };
+    return { title: 'Policy Rejection', bestFor: 'Membuktikan agent punya batasan dan tidak mendanai sponsorship berisiko.' };
   }
   if (normalized.startsWith('openclaw-llm') || normalized.startsWith('openclaw-gemini')) {
-    return { title: normalized.includes('discord') ? 'GLM + Discord' : 'OpenClaw + GLM', bestFor: 'Use this to prove an OpenClaw LLM turn is driving the AdSourcing tool instead of the dashboard faking the result.' };
+    return { title: normalized.includes('discord') ? 'GLM + Discord' : 'OpenClaw + GLM', bestFor: 'Membuktikan turn LLM OpenClaw menjalankan AdSourcing protocol tool.' };
   }
   if (normalized.includes('discord')) {
-    return { title: 'Full Discord Stack', bestFor: 'Use this when the Discord bot env is configured and you want real message delivery on screen.' };
+    return { title: 'Protocol + Discord', bestFor: 'Dipakai saat Discord bot env tersedia dan real delivery ingin terlihat di layar.' };
   }
   if (normalized.includes('local')) {
-    return { title: 'Full Local Stack', bestFor: 'Use this as the technical audit run: local chain, contracts, escrow, proof, and receipts.' };
+    return { title: 'Local Protocol Stack', bestFor: 'Local chain, contract, escrow, proof, dan receipt untuk review teknikal.' };
   }
-  return { title: 'AdSourcing run', bestFor: 'Pick Two-Agent POV for theater, OpenClaw for agenthon proof, and Local Stack for debugging.' };
+  return { title: 'AdSourcing Protocol', bestFor: 'Sponsorship Flow untuk cerita produk, OpenClaw untuk agent proof, Local Protocol Stack untuk review teknikal.' };
 }
 
 function renderModeCard([title, tag, detail]) {
@@ -853,22 +873,31 @@ function renderModeCard([title, tag, detail]) {
 
 function renderNarrative(narrative) {
   if (!narrative) return;
-  $('#narrative-headline').textContent = narrative.headline;
+  $('#narrative-headline').textContent = localNarrativeHeadline(narrative.headline);
   $('#narrative-mode').textContent = cockpitData?.runState?.mode || 'agent evidence';
 
   $('#story-sponsor').textContent = narrative.sponsor?.wallet ? short(narrative.sponsor.wallet) : 'Sponsor Agent';
-  $('#story-sponsor-detail').textContent = `Offer ${money(narrative.sponsor?.offerUsdc)} within max budget ${money(narrative.sponsor?.maxBudgetUsdc)}.`;
+  $('#story-sponsor-detail').textContent = `Offer ${money(narrative.sponsor?.offerUsdc)} masih di bawah max budget ${money(narrative.sponsor?.maxBudgetUsdc)}.`;
 
   $('#story-community').textContent = narrative.community?.wallet ? short(narrative.community.wallet) : 'Community Agent';
   $('#story-community-detail').textContent = `Floor ${money(narrative.community?.floorUsdc)}; decision ${narrative.community?.decision || 'pending'}.`;
 
-  $('#story-escrow').textContent = narrative.escrow?.status || 'Waiting';
+  $('#story-escrow').textContent = narrative.escrow?.status || 'Menunggu';
   $('#story-escrow-detail').textContent = `Amount ${money(narrative.escrow?.amountUsdc)}; payout ${money(narrative.escrow?.communityPayoutUsdc)}; fee ${money(narrative.escrow?.protocolFeeUsdc)}.`;
 
-  $('#story-proof').textContent = narrative.proof?.proofHash ? short(narrative.proof.proofHash) : short(narrative.proof?.receiptId || 'No receipt yet');
+  $('#story-proof').textContent = narrative.proof?.proofHash ? short(narrative.proof.proofHash) : short(narrative.proof?.receiptId || 'Belum ada receipt');
   $('#story-proof-detail').textContent = narrative.proof?.deliveryProof
     ? `Delivery ${narrative.proof.deliveryProof}.`
-    : 'Proof bundle and payment receipt appear after settlement.';
+    : 'Proof bundle dan payment receipt muncul setelah payment selesai.';
+}
+
+function localNarrativeHeadline(headline = '') {
+  const normalized = String(headline).toLowerCase();
+  if (normalized.includes('sponsor paid') || normalized.includes('escrow settled')) {
+    return 'Sponsor membayar, komunitas mengirim proof, escrow selesai.';
+  }
+  if (normalized.includes('no completed')) return 'Belum ada transaksi selesai.';
+  return headline || 'Belum ada transaksi selesai.';
 }
 
 function renderPov(narrative, runState, theater) {
@@ -878,12 +907,12 @@ function renderPov(narrative, runState, theater) {
     const sponsorEvents = theater.events.filter((event) => event.actor === 'sponsor');
     const communityEvents = theater.events.filter((event) => event.actor === 'community');
     $('#sponsor-pov').innerHTML = [
-      ['user', `Mandate: buy a qualified community post. Max spend ${money(theater.sponsor?.maxPriceUsdc)}.`],
+      ['user', `Mandate: beli placement komunitas yang lolos kualifikasi. Max spend ${money(theater.sponsor?.maxPriceUsdc)}.`],
       ...sponsorEvents.map((event) => ['agent', `${event.title}: ${event.detail}`]),
-      theater.escrow ? ['counterparty', `Escrow ${theater.escrow.id}: ${money(theater.escrow.amountUsdc)} ${theater.escrow.settled ? 'settled' : 'locked'}.`] : null,
+      theater.escrow ? ['counterparty', `Escrow ${theater.escrow.id}: ${money(theater.escrow.amountUsdc)} ${theater.escrow.settled ? 'selesai' : 'terkunci'}.`] : null,
     ].filter(Boolean).map(renderMessage).join('');
     $('#community-pov').innerHTML = [
-      ['user', `Mandate: sell one safe ad slot above ${money(theater.community?.floorUsdc)}.`],
+      ['user', `Mandate: jual satu slot aman di atas ${money(theater.community?.floorUsdc)}.`],
       ...communityEvents.map((event) => ['agent', `${event.title}: ${event.detail}`]),
       theater.delivery ? ['counterparty', `Delivery proof: ${theater.delivery.deliveryProof}.`] : null,
     ].filter(Boolean).map(renderMessage).join('');
@@ -900,16 +929,16 @@ function renderPov(narrative, runState, theater) {
   const proof = narrative?.proof?.proofHash || runState?.openclawResult?.text?.match(/Proof ID:\*\* `([^`]+)`/)?.[1];
 
   $('#sponsor-pov').innerHTML = [
-    ['user', `Mandate: find a community over 300 members. Max spend ${maxBudget}.`],
-    ['agent', `I verified the community score, inventory, and policy. I offered ${offer}.`],
-    ['counterparty', `Community accepted because the offer cleared its floor and content rules.`],
+    ['user', `Mandate: cari komunitas di atas 300 member. Max spend ${maxBudget}.`],
+    ['agent', `Community score, inventory, dan policy sudah diverifikasi. Offer terkirim ${offer}.`],
+    ['counterparty', `Community menerima karena offer melewati floor dan content rules.`],
     ['agent', `Escrow status: ${status}. Receipt ${short(receipt || 'pending')}.`],
   ].map(renderMessage).join('');
 
   $('#community-pov').innerHTML = [
-    ['user', `Mandate: accept clean sponsor posts above ${floor}.`],
-    ['agent', `I checked sponsor signature, ERC-8004 wallet binding, score, and daily inventory.`],
-    ['counterparty', `Sponsor funded escrow before delivery.`],
+    ['user', `Mandate: terima sponsor post yang aman di atas ${floor}.`],
+    ['agent', `Sponsor signature, ERC-8004 wallet binding, score, dan daily inventory sudah dicek.`],
+    ['counterparty', `Sponsor mengunci dana di escrow sebelum delivery.`],
     ['agent', `Payout ${payout}; protocol fee ${fee}; proof ${short(proof || 'pending')}.`],
   ].map(renderMessage).join('');
 }
@@ -917,6 +946,9 @@ function renderPov(narrative, runState, theater) {
 function renderFlowBoard(data) {
   const theater = data?.theater || {};
   const narrative = data?.narrative || {};
+  const mandates = data?.mandates || {};
+  const sponsorMandate = mandates.sponsor?.mandate || {};
+  const communityMandate = mandates.community?.mandate || {};
   const logPhase = phaseFromRunLogs(data?.runState);
   const currentPhase = logPhase || theaterPhase(theater.status) || activeDeal?.phase || data?.proofs?.[0]?.phase || 'DISCOVERED';
   const currentIndex = Math.max(0, phases.indexOf(currentPhase));
@@ -926,15 +958,23 @@ function renderFlowBoard(data) {
   const escrow = theater.escrow || narrative.escrow || {};
   const proof = theater.proof || narrative.proof || {};
   const handshake = theater.handshake || {};
+  const sponsorName = sponsorDisplayName(data, theater);
+  const communityName = communityDisplayName(data, theater);
+  const sponsorWallet = theater.sponsor?.wallet || narrative.sponsor?.wallet || mandates.sponsor?.wallet;
+  const communityWallet = theater.community?.wallet || narrative.community?.wallet || mandates.community?.wallet;
+  const sponsorAgentId = theater.sponsor?.agentId || mandates.sponsor?.agentId;
+  const communityAgentId = theater.community?.agentId || mandates.community?.agentId;
+  const adCopy = sponsoredPostCopy(sponsorMandate.adCopy);
+  const deliveryProof = theater.delivery?.deliveryProof || narrative.proof?.deliveryProof || 'delivery proof pending';
 
   const progressPercent = phases.length > 1 ? Math.round((currentIndex / (phases.length - 1)) * 100) : 0;
   const motionLabel = isRejected
-    ? 'Policy stopped the deal before escrow.'
+    ? 'Policy menghentikan sponsorship sebelum dana masuk escrow.'
     : isRunning
-      ? `Live run moving through ${phaseStories[currentPhase]?.title || currentPhase}.`
+      ? `Agent sedang menjalankan tahap ${phaseStories[currentPhase]?.title || currentPhase}.`
       : currentPhase === 'SETTLED'
-        ? 'Deal settled. Payment, proof, and reputation receipt are complete.'
-        : `Replay parked at ${phaseStories[currentPhase]?.title || currentPhase}.`;
+        ? 'Payment selesai setelah delivery proof diterima.'
+        : `Alur berhenti di tahap ${phaseStories[currentPhase]?.title || currentPhase}.`;
 
   $('#flow-motion').className = `flow-motion ${isRunning ? 'running' : ''} ${isRejected ? 'rejected' : ''}`;
   $('#flow-motion').style.setProperty('--flow-progress', `${progressPercent}%`);
@@ -944,51 +984,63 @@ function renderFlowBoard(data) {
       <span class="motion-pulse"></span>
     </div>
     <div class="motion-copy">
-      <strong>${escapeHtml(isRejected ? 'Blocked before escrow' : currentPhase.replace('_', ' '))}</strong>
+      <strong>${escapeHtml(isRejected ? 'Ditahan sebelum escrow' : currentPhase === 'SETTLED' ? 'Payment selesai setelah proof' : currentPhase.replace('_', ' '))}</strong>
       <span>${escapeHtml(motionLabel)}</span>
     </div>
   `;
 
-  $('#flow-sponsor-title').textContent = theater.sponsor?.wallet ? short(theater.sponsor.wallet) : 'Budget mandate';
-  $('#flow-sponsor-detail').textContent = `Autonomous buyer with max spend ${money(theater.sponsor?.maxPriceUsdc ?? narrative.sponsor?.maxBudgetUsdc)} and signed authority to fund escrow.`;
+  $('#flow-sponsor-title').textContent = sponsorName;
+  $('#flow-sponsor-detail').innerHTML = [
+    'SponsorAgent menjaga budget, max price, dan brand safety.',
+    `<span class="entity-meta">Wallet ${escapeHtml(short(sponsorWallet || 'waiting'))}${sponsorAgentId ? ` · Agent ID ${escapeHtml(String(sponsorAgentId))}` : ''}</span>`,
+  ].join('');
   $('#flow-sponsor-facts').innerHTML = renderFacts([
-    ['Max spend', money(theater.sponsor?.maxPriceUsdc ?? narrative.sponsor?.maxBudgetUsdc)],
+    ['Max price', money(theater.sponsor?.maxPriceUsdc ?? sponsorMandate.maxPricePerPostUsdc ?? narrative.sponsor?.maxBudgetUsdc)],
     ['Offer', money(offer)],
-    ['Score seen', handshake.sponsorScore ?? '78'],
+    ['Sponsor score', handshake.sponsorScore ?? '78'],
   ]);
 
-  $('#flow-community-title').textContent = theater.community?.wallet ? short(theater.community.wallet) : 'Inventory mandate';
-  $('#flow-community-detail').textContent = `Autonomous seller with floor ${money(theater.community?.floorUsdc ?? narrative.community?.floorUsdc)} and content safety rules.`;
+  $('#flow-community-title').textContent = communityName;
+  $('#flow-community-detail').innerHTML = [
+    'CommunityAgent menjaga floor price, content rules, dan delivery slot.',
+    `<span class="entity-meta">Wallet ${escapeHtml(short(communityWallet || 'waiting'))}${communityAgentId ? ` · Agent ID ${escapeHtml(String(communityAgentId))}` : ''}</span>`,
+  ].join('');
   $('#flow-community-facts').innerHTML = renderFacts([
-    ['Floor', money(theater.community?.floorUsdc ?? narrative.community?.floorUsdc)],
+    ['Floor price', money(theater.community?.floorUsdc ?? communityMandate.priceFloorUsdc ?? narrative.community?.floorUsdc)],
     ['Platform', theater.community?.platform || 'discord'],
-    ['Score seen', handshake.communityScore ?? '82'],
+    ['Community score', handshake.communityScore ?? '82'],
   ]);
 
   $('#flow-route').innerHTML = [
     {
-      label: 'Counterparty',
-      title: handshake.accepted ? 'Identity accepted' : 'Awaiting handshake',
+      label: 'Identity',
+      title: handshake.accepted ? 'Identity verified' : 'Menunggu handshake',
       body: handshake.accepted
-        ? `Wallet, signature, ERC-8004 binding, score ${handshake.sponsorScore}, and inventory passed.`
-        : 'Agents must pass identity and reputation gates before negotiation.',
+        ? `Wallet dan signature cocok dengan ERC-8004 binding. Score ${handshake.sponsorScore}.`
+        : 'Agent harus lolos identity dan reputation gate sebelum negosiasi.',
     },
     {
       label: 'Payment',
-      title: escrow.id !== undefined ? `${money(escrow.amountUsdc)} locked` : 'Escrow not funded',
+      title: escrow.id !== undefined ? `${money(escrow.amountUsdc)} terkunci` : 'Escrow belum funded',
       body: escrow.id !== undefined
-        ? `Escrow ${escrow.id} funded before delivery. Community payout is ${money(narrative.escrow?.communityPayoutUsdc)}.`
-        : 'Sponsor cannot receive delivery without locking payment first.',
+        ? `Escrow funded sebelum delivery. Payout komunitas ${money(narrative.escrow?.communityPayoutUsdc)}.`
+        : 'Sponsor tidak mendapat delivery sebelum payment terkunci.',
     },
     {
       label: 'Proof',
-      title: proof.receiptId ? 'Receipt written' : 'Proof pending',
+      title: proof.receiptId ? 'Receipt tercatat' : 'Proof pending',
       body: proof.receiptId
-        ? `Delivery ${short(theater.delivery?.deliveryProof || narrative.proof?.deliveryProof || 'proof')} settled into ${short(proof.receiptId)}.`
-        : 'Settlement writes proof and payment receipts for Q&A.',
+        ? `Delivery proof tercatat ke ${short(proof.receiptId)}.`
+        : 'Proof bundle dan payment receipt muncul setelah delivery diverifikasi.',
+    },
+    {
+      label: 'Sponsored Post Preview',
+      title: communityName,
+      body: `${adCopy.slice(0, 92)}${adCopy.length > 92 ? '...' : ''} · Proof ${short(deliveryProof)}`,
+      preview: true,
     },
   ].map((item) => `
-    <article class="route-card">
+    <article class="route-card ${item.preview ? 'sponsored-preview' : ''}">
       <span>${escapeHtml(item.label)}</span>
       <strong>${escapeHtml(item.title)}</strong>
       <p>${escapeHtml(item.body)}</p>
@@ -996,13 +1048,13 @@ function renderFlowBoard(data) {
   `).join('');
 
   const stepRows = [
-    ['DISCOVERED', 'Sponsor', 'Intent broadcast', 'Budget, audience floor, and ad policy are signed.', theater.intent?.txHash || activeDeal?.txHashes?.[0] || 'waiting'],
-    ['HANDSHAKE_VERIFIED', 'Community', 'Identity gate', 'Wallet, signature, score, and inventory pass.', handshake.accepted ? `score ${handshake.sponsorScore}` : 'waiting'],
-    ['NEGOTIATING', 'Sponsor', `Offer ${money(offer)}`, 'Sponsor stays inside its max-price mandate.', theater.offer?.signature || 'waiting'],
-    ['AGREED', 'Community', theater.response?.type ? `Decision ${theater.response.type}` : 'Terms decision', 'Floor price and content policy clear the offer.', theater.response?.signature || 'waiting'],
-    ['ESCROW_FUNDED', 'Sponsor', escrow.id !== undefined ? `Escrow ${escrow.id}` : 'Escrow funding', 'Payment is locked before delivery happens.', escrow.txHash || 'waiting'],
-    ['DELIVERED', 'Community', 'Ad delivered', 'Community posts and logs a signed delivery proof.', theater.delivery?.deliveryProof || narrative.proof?.deliveryProof || 'waiting'],
-    ['SETTLED', 'Sponsor', 'Settlement verified', 'Sponsor verifies delivery; receipt and payout are final.', proof.receiptId || proof.proofHash || 'waiting'],
+    ['DISCOVERED', 'Sponsor', 'Intent broadcast', 'Budget, audience floor, dan ad policy ditandatangani.', theater.intent?.txHash || activeDeal?.txHashes?.[0] || 'waiting'],
+    ['HANDSHAKE_VERIFIED', 'Community', 'Identity gate', 'Wallet, signature, score, dan inventory lolos.', handshake.accepted ? `score ${handshake.sponsorScore}` : 'waiting'],
+    ['NEGOTIATING', 'Sponsor', `Offer ${money(offer)}`, 'SponsorAgent tetap di dalam max-price mandate.', theater.offer?.signature || 'waiting'],
+    ['AGREED', 'Community', theater.response?.type ? `Decision ${theater.response.type}` : 'Terms decision', 'Floor price dan content policy menerima offer.', theater.response?.signature || 'waiting'],
+    ['ESCROW_FUNDED', 'Sponsor', escrow.id !== undefined ? `Escrow ${escrow.id}` : 'Escrow funding', 'Payment terkunci sebelum delivery.', escrow.txHash || 'waiting'],
+    ['DELIVERED', 'Community', 'Ad delivered', 'Community mengirim sponsored post dan delivery proof.', theater.delivery?.deliveryProof || narrative.proof?.deliveryProof || 'waiting'],
+    ['SETTLED', 'Sponsor', 'Payment receipt', 'Sponsor memverifikasi delivery; payout dan receipt final.', proof.receiptId || proof.proofHash || 'waiting'],
   ];
 
   $('#flow-steps').innerHTML = stepRows.map(([phase, actor, title, body, evidence], index) => {
