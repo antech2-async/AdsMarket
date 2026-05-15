@@ -296,6 +296,100 @@ function renderRegistry(data) {
     '</article>',
   ].join('')).join('');
 }
+
+function renderDokuRail(doku = {}) {
+  const configured = Boolean(doku.enabled && doku.configured);
+  const state = !doku.enabled
+    ? 'Disabled'
+    : configured
+      ? doku.lastPaymentUrl
+        ? 'Checkout ready'
+        : 'Configured'
+      : 'Missing credentials';
+  const pill = $('#doku-status-pill');
+  if (pill) {
+    pill.textContent = state;
+    pill.classList.toggle('ready', configured);
+    pill.classList.toggle('error', Boolean(doku.lastError || !configured));
+  }
+  const railState = $('#doku-rail-state');
+  if (railState) railState.textContent = state;
+  const mode = $('#doku-mode');
+  if (mode) mode.textContent = doku.mode || 'n/a';
+  const endpoint = $('#doku-endpoint');
+  if (endpoint) endpoint.textContent = doku.checkoutEndpoint || 'n/a';
+  const invoice = $('#doku-last-invoice');
+  if (invoice) invoice.textContent = doku.lastInvoiceNumber || 'n/a';
+  const button = $('#doku-create-checkout');
+  if (button) button.disabled = !configured;
+
+  const title = $('#doku-result-title');
+  const copy = $('#doku-result-copy');
+  const link = $('#doku-payment-link');
+  if (!title || !copy || !link) return;
+
+  if (doku.lastPaymentUrl) {
+    title.textContent = doku.lastInvoiceNumber || 'DOKU checkout generated';
+    copy.textContent = doku.lastCheckoutAt
+      ? `Generated ${new Date(doku.lastCheckoutAt).toLocaleTimeString()}. Sandbox link is ready for sponsor-side payment review.`
+      : 'Sandbox link is ready for sponsor-side payment review.';
+    link.href = doku.lastPaymentUrl;
+    link.classList.remove('disabled');
+  } else {
+    title.textContent = doku.lastError ? 'DOKU checkout failed' : 'No checkout generated yet';
+    copy.textContent = doku.lastError || (configured
+      ? 'Generate a checkout to show the external fiat rail beside the on-chain escrow.'
+      : 'Configure DOKU env on the server to enable sandbox checkout generation.');
+    link.href = '#';
+    link.classList.add('disabled');
+  }
+}
+
+function renderDeliveryMode(delivery = {}) {
+  const primary = $('#run-two-agent-theater');
+  if (!primary) return;
+  const title = primary.querySelector('strong');
+  const detail = primary.querySelector('span');
+  if (delivery.discordConfigured) {
+    if (title) title.textContent = 'Mulai Negosiasi Agent + Discord';
+    if (detail) detail.textContent = 'Jalankan alur SponsorAgent dan CommunityAgent sampai post Discord, escrow, dan payment receipt.';
+  } else {
+    if (title) title.textContent = 'Mulai Negosiasi Agent';
+    if (detail) detail.textContent = 'Jalankan alur lokal dari mandate sampai payment receipt. Tambahkan Discord env untuk live post.';
+  }
+}
+
+async function createDokuCheckout() {
+  const button = $('#doku-create-checkout');
+  const title = $('#doku-result-title');
+  const copy = $('#doku-result-copy');
+  button.disabled = true;
+  title.textContent = 'Generating DOKU checkout...';
+  copy.textContent = 'Calling the backend DOKU MCP rail. No secret is sent to the browser.';
+  try {
+    const response = await fetch('/api/doku/checkout', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        amountUsd: Number($('#doku-amount')?.value || 1),
+        description: $('#doku-description')?.value || 'AdSourcing sponsor checkout',
+        sponsorWallet: cockpitData?.theater?.sponsor?.wallet || cockpitData?.mandates?.sponsor?.wallet,
+        communityWallet: cockpitData?.theater?.community?.wallet || cockpitData?.mandates?.community?.wallet,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.checkout?.error || data.error || 'DOKU checkout failed');
+    cockpitData = { ...(cockpitData || {}), doku: data.doku };
+    renderDokuRail(data.doku);
+  } catch (error) {
+    title.textContent = 'DOKU checkout failed';
+    copy.textContent = error.message;
+  } finally {
+    await loadCockpit();
+    button.disabled = false;
+  }
+}
+
 function renderMandates(mandates) {
   const sponsor = mandates?.sponsor?.mandate || {};
   const community = mandates?.community?.mandate || {};
@@ -1564,6 +1658,8 @@ async function loadCockpit() {
   renderPov(data.narrative, data.runState, data.theater);
   renderFlowBoard(data);
   renderRegistry(data);
+  renderDokuRail(data.doku);
+  renderDeliveryMode(data.delivery);
 
   const proof = data.proofs?.[0];
   const currentPhase = theaterPhase(data.theater?.status) || activeDeal?.phase || proof?.phase || 'DISCOVERED';
@@ -1591,13 +1687,14 @@ $('#save-mandates').addEventListener('click', saveMandates);
 $('#sponsor-intake-send').addEventListener('click', () => sendIntake('sponsor'));
 $('#community-intake-send').addEventListener('click', () => sendIntake('community'));
 $('#save-chat-mandates').addEventListener('click', saveChatMandates);
-$('#run-two-agent-theater').addEventListener('click', () => startTwoAgentTheater(true));
+$('#run-two-agent-theater').addEventListener('click', () => startTwoAgentTheater(!cockpitData?.delivery?.discordConfigured));
 $('#run-openclaw-duel').addEventListener('click', () => startOpenClawDuelRun(false));
 $('#run-badcase').addEventListener('click', startBadCaseRun);
 $('#run-openclaw-gemini').addEventListener('click', () => startOpenClawGeminiRun(true));
 $('#run-openclaw-discord').addEventListener('click', () => startOpenClawGeminiRun(false));
 $('#run-agenthon').addEventListener('click', () => startAgenthonRun(true));
 $('#run-agenthon-discord').addEventListener('click', () => startAgenthonRun(false));
+$('#doku-create-checkout').addEventListener('click', createDokuCheckout);
 setSelectedView(selectedView);
 renderIntake();
 loadCockpit();

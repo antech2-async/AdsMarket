@@ -34,8 +34,8 @@ export interface DokuCheckoutResult {
 const STATUS_KEY = 'doku_status';
 const SANDBOX_MCP = 'https://api-sandbox.doku.com/doku-mcp-server/mcp';
 const PRODUCTION_MCP = 'https://mcp.doku.com/mcp';
-const SANDBOX_CHECKOUT = 'https://api-sandbox.doku.com/checkout/v1/payment';
-const PRODUCTION_CHECKOUT = 'https://api.doku.com/checkout/v1/payment';
+const SANDBOX_CHECKOUT = 'mcp:create_doku_direct_checkout';
+const PRODUCTION_CHECKOUT = 'mcp:create_doku_direct_checkout';
 
 export class DokuService {
   private persistence = new PersistenceService();
@@ -48,6 +48,7 @@ export class DokuService {
   private mcpEndpoint = process.env.DOKU_MCP_ENDPOINT || (this.mode === 'production' ? PRODUCTION_MCP : SANDBOX_MCP);
   private checkoutEndpoint = process.env.DOKU_CHECKOUT_ENDPOINT || (this.mode === 'production' ? PRODUCTION_CHECKOUT : SANDBOX_CHECKOUT);
   private timeoutMs = Number(process.env.DOKU_TIMEOUT_MS ?? 10000);
+  private idrPerUsd = Number(process.env.DOKU_IDR_PER_USD ?? 16000);
 
   isConfigured(): boolean {
     return Boolean(this.enabled && this.clientId && this.authorization);
@@ -77,39 +78,24 @@ export class DokuService {
     }
 
     const invoiceNumber = `ADS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const amountIdr = String(Math.max(1000, Math.round(input.amountUsd * this.idrPerUsd)));
     try {
-      const response = await axios.post(
-        this.checkoutEndpoint,
-        {
-          order: {
-            invoice_number: invoiceNumber,
-            amount: Math.max(1, Math.round(input.amountUsd)),
-          },
-          payment: {
-            payment_due_date: 60,
-          },
-          customer: {
-            name: 'AdSourcing Sponsor Agent',
-            email: process.env.DOKU_CUSTOMER_EMAIL || 'sponsor@adsourcing.local',
-          },
-          additional_info: {
-            description: input.description,
-            escrow_id: input.escrowId,
-            sponsor_wallet: input.sponsorWallet,
-            community_wallet: input.communityWallet,
-          },
+      const data = await this.callMcpTool('create_doku_direct_checkout', {
+        toolRequest: {
+          amount: amountIdr,
+          currency: 'IDR',
+          customerName: process.env.DOKU_CUSTOMER_NAME || 'AdSourcing Sponsor Agent',
+          customerEmail: process.env.DOKU_CUSTOMER_EMAIL || 'sponsor@adsourcing.local',
+          customerPhone: process.env.DOKU_CUSTOMER_PHONE || '+6281234567890',
+          invoiceNumber,
         },
-        {
-          headers: this.headers(invoiceNumber),
-          timeout: this.timeoutMs,
-        },
-      );
+      });
 
       const paymentUrl =
-        response.data?.response?.payment?.url
-        ?? response.data?.payment?.url
-        ?? response.data?.checkout_url
-        ?? response.data?.url;
+        data?.response?.payment?.url
+        ?? data?.payment?.url
+        ?? data?.checkout_url
+        ?? data?.url;
 
       await this.writeStatus({
         lastCheckoutAt: Date.now(),
@@ -121,9 +107,9 @@ export class DokuService {
       return {
         ok: true,
         provider: 'doku',
-        invoiceNumber,
+        invoiceNumber: data?.invoiceNumber ?? invoiceNumber,
         paymentUrl,
-        raw: response.data,
+        raw: data,
       };
     } catch (error) {
       const message = formatError(error);
@@ -140,6 +126,45 @@ export class DokuService {
       'Request-Id': requestId,
       'Request-Timestamp': new Date().toISOString(),
     };
+  }
+
+  private async callMcpTool(name: string, args: Record<string, unknown>): Promise<any> {
+    const response = await axios.post(
+      this.mcpEndpoint,
+      {
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'tools/call',
+        params: {
+          name,
+          arguments: args,
+        },
+      },
+      {
+        headers: {
+          ...this.headers(`REQ-${Date.now()}`),
+          accept: 'application/json, text/event-stream',
+        },
+        timeout: this.timeoutMs,
+      },
+    );
+
+    const result = response.data?.result;
+    if (response.data?.error) {
+      throw new Error(response.data.error.message || JSON.stringify(response.data.error));
+    }
+    if (result?.isError) {
+      const message = result.content?.map((item: any) => item.text).filter(Boolean).join('\n') || 'DOKU MCP tool returned an error.';
+      throw new Error(message);
+    }
+
+    const text = result?.content?.find((item: any) => item.type === 'text')?.text;
+    if (!text) return result;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { text };
+    }
   }
 
   private async writeStatus(update: Partial<DokuStatus>): Promise<void> {

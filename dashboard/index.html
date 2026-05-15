@@ -162,6 +162,43 @@
         <div id="registry-evidence-grid" class="evidence-grid"></div>
       </section>
 
+      <section class="doku-panel" aria-label="DOKU payment rail">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">DOKU Payment Rail</p>
+            <h2>Generate checkout sponsor dari dashboard, bukan cuma status text.</h2>
+            <p>Panel ini memanggil DOKU sandbox via backend. Credential tetap di server; browser hanya menerima invoice dan payment link.</p>
+          </div>
+          <span id="doku-status-pill" class="rail-pill">checking DOKU</span>
+        </div>
+        <div class="doku-grid">
+          <article class="doku-card">
+            <span class="label">Rail State</span>
+            <strong id="doku-rail-state">Loading</strong>
+            <dl class="doku-facts">
+              <div><dt>Mode</dt><dd id="doku-mode">n/a</dd></div>
+              <div><dt>Endpoint</dt><dd id="doku-endpoint">n/a</dd></div>
+              <div><dt>Last invoice</dt><dd id="doku-last-invoice">n/a</dd></div>
+            </dl>
+          </article>
+          <article class="doku-card doku-form-card">
+            <span class="label">Sponsor Checkout</span>
+            <strong>Buat payment link DOKU sandbox</strong>
+            <div class="doku-form">
+              <label>Amount USD equivalent <input id="doku-amount" type="number" min="1" step="1" value="1"></label>
+              <label class="wide">Description <textarea id="doku-description" rows="2">AdSourcing sponsor checkout for community ad escrow</textarea></label>
+              <button id="doku-create-checkout" type="button">Generate DOKU Checkout</button>
+            </div>
+          </article>
+          <article class="doku-card doku-result-card">
+            <span class="label">Checkout Result</span>
+            <strong id="doku-result-title">No checkout generated yet</strong>
+            <p id="doku-result-copy">Run a checkout or complete an agent flow to attach a DOKU invoice to the payment evidence.</p>
+            <a id="doku-payment-link" class="doku-link disabled" href="#" target="_blank" rel="noreferrer">Open DOKU Checkout</a>
+          </article>
+        </div>
+      </section>
+
       <section class="pov-panel" aria-label="Two user agent point of view">
         <div class="section-head">
           <div>

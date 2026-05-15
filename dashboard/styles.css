@@ -557,6 +557,7 @@ h3 {
 .metric,
 .workflow-panel,
 .registry-panel,
+.doku-panel,
 .mandate-panel,
 .run-panel,
 .narrative-panel,
@@ -603,6 +604,7 @@ h3 {
 
 .workflow-panel,
 .registry-panel,
+.doku-panel,
 .mandate-panel,
 .run-panel,
 .narrative-panel,
@@ -635,6 +637,28 @@ h3 {
 #registry-status {
   color: var(--muted);
   font-size: 12px;
+}
+
+.rail-pill {
+  align-self: start;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rail-pill.ready {
+  border-color: #9ccfb5;
+  background: var(--escrow-soft);
+  color: var(--escrow);
+}
+
+.rail-pill.error {
+  border-color: #e6b4b8;
+  background: var(--bad-soft);
+  color: var(--bad);
 }
 
 .stage-proof {
@@ -1057,6 +1081,135 @@ h3 {
   background: var(--agent-soft);
   color: var(--agent);
   font-weight: 800;
+}
+
+.doku-panel {
+  background:
+    linear-gradient(135deg, rgba(8, 111, 216, 0.08), rgba(31, 143, 99, 0.08)),
+    var(--surface);
+}
+
+.doku-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.35fr 1fr;
+  gap: 10px;
+}
+
+.doku-card {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.82);
+}
+
+.doku-card > strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 17px;
+}
+
+.doku-facts {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.doku-facts div {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.doku-facts dt {
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.doku-facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doku-form {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: end;
+  margin-top: 12px;
+}
+
+.doku-form label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.doku-form input,
+.doku-form textarea {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.doku-form textarea {
+  resize: vertical;
+  line-height: 1.35;
+}
+
+.doku-form button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #9ccfb5;
+  border-radius: 8px;
+  background: var(--escrow-soft);
+  color: var(--escrow);
+  font-weight: 900;
+}
+
+.doku-result-card p {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.doku-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  margin-top: 12px;
+  padding: 0 12px;
+  border: 1px solid #bcd8f5;
+  border-radius: 8px;
+  background: var(--agent-soft);
+  color: var(--agent);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.doku-link.disabled {
+  pointer-events: none;
+  opacity: 0.54;
 }
 
 .run-panel {
@@ -1565,8 +1718,13 @@ h3 {
 
   .metrics,
   .narrative-grid,
+  .doku-grid,
   .run-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .doku-form {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1641,6 +1799,7 @@ h3 {
   .metrics,
   .registry-grid,
   .evidence-grid,
+  .doku-grid,
   .mandate-grid,
   .intake-grid,
   .pov-grid,

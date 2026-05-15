@@ -423,11 +423,47 @@ Example:
       const guildMatches = !expectedGuildId || !message.guild_id || String(message.guild_id) === expectedGuildId;
       const channelMatches = !message.channel_id || String(message.channel_id) === channelId;
       const authorMatches = !expectedAuthorId || String(message.author?.id) === expectedAuthorId;
-      return response.status === 200 && guildMatches && channelMatches && authorMatches;
+      const verified = response.status === 200 && guildMatches && channelMatches && authorMatches;
+      if (verified) {
+        await this.announceDiscordVerification(channelId, messageId);
+      }
+      return verified;
     } catch (error: any) {
       const detail = error?.response?.data?.message || error?.response?.status || error?.message || String(error);
       console.warn(`[SponsorAgent] Discord delivery verification failed for message ${messageId}: ${detail}`);
       return false;
+    }
+  }
+
+  private async announceDiscordVerification(channelId: string, messageId: string): Promise<void> {
+    const token = process.env.SPONSOR_DISCORD_BOT_TOKEN;
+    if (!token || process.env.SPONSOR_DISCORD_ANNOUNCE === 'false') return;
+    try {
+      await axios.post(
+        `https://discord.com/api/v10/channels/${channelId}/messages`,
+        {
+          embeds: [{
+            color: 0x2ecc71,
+            title: 'Settlement verified',
+            description: [
+              'SponsorAgent verified the CommunityAgent delivery proof.',
+              `Discord message ID: ${messageId}`,
+              'Escrow settlement can close with receipt evidence.',
+            ].join('\n'),
+            footer: { text: 'Verified via AdSourcing SponsorAgent' },
+            timestamp: new Date().toISOString(),
+          }],
+          allowed_mentions: { parse: [] },
+        },
+        {
+          headers: { Authorization: `Bot ${token}` },
+          timeout: 5000,
+        },
+      );
+      console.log(`[SponsorAgent] Discord verification receipt posted for message ${messageId}.`);
+    } catch (error: any) {
+      const detail = error?.response?.data?.message || error?.response?.status || error?.message || String(error);
+      console.warn(`[SponsorAgent] Could not post Discord verification receipt: ${detail}`);
     }
   }
 

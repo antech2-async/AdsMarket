@@ -240,6 +240,16 @@ app.get('/api/cockpit', async (_req, res) => {
       mem9,
     },
     doku,
+    delivery: {
+      discordConfigured: Boolean(
+        process.env.COMMUNITY_DISCORD_BOT_TOKEN
+        && process.env.SPONSOR_DISCORD_BOT_TOKEN
+        && process.env.DEMO_DISCORD_GUILD_ID
+        && process.env.DEMO_DISCORD_CHANNEL_ID,
+      ),
+      guildId: process.env.DEMO_DISCORD_GUILD_ID || null,
+      channelId: process.env.DEMO_DISCORD_CHANNEL_ID || null,
+    },
     mandates: {
       sponsor: mandates.sponsorSnapshot ?? {
         role: 'sponsor',
@@ -264,6 +274,27 @@ app.post('/api/mandates', async (req, res) => {
     res.json({ ok: true, mandates: saved });
   } catch (error: any) {
     res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/doku/checkout', async (req, res) => {
+  try {
+    const amountUsd = Number(req.body?.amountUsd ?? 1);
+    if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+      res.status(400).json({ ok: false, error: 'amountUsd must be a positive number.' });
+      return;
+    }
+
+    const result = await dokuService.createCheckout({
+      amountUsd,
+      description: String(req.body?.description || 'AdSourcing sponsor checkout'),
+      sponsorWallet: String(req.body?.sponsorWallet || process.env.SPONSOR_WALLET_ADDRESS || ''),
+      communityWallet: String(req.body?.communityWallet || process.env.COMMUNITY_WALLET_ADDRESS || ''),
+    });
+    const status = await dokuService.status();
+    res.status(result.ok ? 200 : 502).json({ ok: result.ok, checkout: result, doku: status });
+  } catch (error: any) {
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 
