@@ -10,6 +10,7 @@ import { writeProofBundle } from '../services/evidenceService';
 import { buildPaymentReceipt, writePaymentReceipt } from '../services/paymentReceiptService';
 import { loadConfiguredMandates } from '../services/mandateConfigService';
 import { PersistenceService } from '../services/persistenceService';
+import { AgentMemoryService } from '../services/agentMemoryService';
 import { NegotiationResponse } from '../types/messages';
 import { REPO_ROOT } from '../services/pathConfig';
 import mockUsdcArtifact from '../artifacts/contracts/MockUSDC.sol/MockUSDC.json';
@@ -340,6 +341,27 @@ export async function runAgenthonLocal() {
         proofHash: proof.bundle.finalHash,
       });
       const paymentPath = await writePaymentReceipt(paymentReceipt);
+      const memory = new AgentMemoryService();
+      await Promise.all([
+        memory.rememberSettlement({
+          role: 'sponsor',
+          wallet: sponsorAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: paymentPath,
+          source: 'agenthon-local',
+        }),
+        memory.rememberSettlement({
+          role: 'community',
+          wallet: communityAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: paymentPath,
+          source: 'agenthon-local',
+        }),
+      ]);
       console.log(`[AgenthonLocal] Proof bundle: ${proof.filePath}`);
       console.log(`[AgenthonLocal] Payment receipt: ${paymentPath}`);
     }

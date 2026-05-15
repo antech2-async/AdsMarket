@@ -196,7 +196,7 @@ export class CommunityAgent {
     const adCopy = await this.fetchAdCopy(adCopyUri);
     const dealId = buildDealId(intentId, sponsorWallet);
     const incomingPolicy = this.policy.evaluateIncomingOffer(offer, adCopy);
-    const sponsorMemory = this.memory.counterpartyMemory(this.dealState.list(), sponsorWallet);
+    const sponsorMemory = await this.memory.counterpartyMemoryWithMem9(this.dealState.list(), sponsorWallet);
 
     if (!incomingPolicy.allowed) {
       const rejected: any = {
@@ -237,6 +237,7 @@ Your mandate is strict — you cannot accept below your floor:
 - Content rules: ${this.mandate.contentRules.join(', ')}
 - Your community size: ${this.mandate.memberCount} members
 Sponsor memory: ${sponsorMemory.priorDeals} prior deals, ${sponsorMemory.successfulDeals} settled, ${sponsorMemory.disputedDeals} disputed. ${sponsorMemory.recommendation}
+Mem9 recall: ${sponsorMemory.mem9?.summary ?? 'Not queried.'}
 
 Evaluate this incoming ad offer and the ad copy below.
 First check if the ad copy violates any content rules. If it does, REJECT immediately.

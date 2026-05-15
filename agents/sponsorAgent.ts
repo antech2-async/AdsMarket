@@ -198,7 +198,7 @@ export class SponsorAgent {
     intentId: string | bigint = 'manual'
   ): Promise<NegotiationOffer> {
     const history = this.activeNegotiations.get(communityWallet) ?? [];
-    const counterpartyMemory = this.memory.counterpartyMemory(this.dealState.list(), communityWallet);
+    const counterpartyMemory = await this.memory.counterpartyMemoryWithMem9(this.dealState.list(), communityWallet);
 
     const systemPrompt = `You are a negotiation agent acting on behalf of an advertiser.
 Your mandate is strict — you cannot exceed it:
@@ -208,6 +208,7 @@ Your mandate is strict — you cannot exceed it:
 The community has ${memberCount} members and a reputation score of ${communityScore}/100.
 A higher score means you can trust them more. A score above 80 means minor premium is acceptable.
 Counterparty memory: ${counterpartyMemory.priorDeals} prior deals, ${counterpartyMemory.successfulDeals} settled, ${counterpartyMemory.disputedDeals} disputed. ${counterpartyMemory.recommendation}
+Mem9 recall: ${counterpartyMemory.mem9?.summary ?? 'Not queried.'}
 
 Your goal: close a deal within budget. Be reasonable. This is round ${round} of maximum 3.
 If this is round 3, either accept their last counter or walk away — no more counters.

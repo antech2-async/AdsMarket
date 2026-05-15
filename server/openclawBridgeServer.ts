@@ -208,11 +208,12 @@ async function executeTool(toolName: string, params: any) {
 }
 
 async function readStatus() {
-  const [sponsorMandate, communityMandate, sponsorMemory, communityMemory, evidence, badCase] = await Promise.all([
+  const [sponsorMandate, communityMandate, sponsorMemory, communityMemory, mem9, evidence, badCase] = await Promise.all([
     readJson(path.join(CACHE_DIR, 'sponsor_mandate.json'), null),
     readJson(path.join(CACHE_DIR, 'community_mandate.json'), null),
     readJson(path.join(CACHE_DIR, 'sponsor_memory.json'), null),
     readJson(path.join(CACHE_DIR, 'community_memory.json'), null),
+    memory.mem9Status(),
     readEvidence(5),
     readJson(path.join(CACHE_DIR, 'badcase-result.json'), null),
   ]);
@@ -223,6 +224,7 @@ async function readStatus() {
     communityMandate,
     sponsorMemory,
     communityMemory,
+    mem9,
     evidence,
     badCase,
   };

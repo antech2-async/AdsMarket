@@ -11,6 +11,7 @@ import { SettlementService } from './settlementService';
 import { writeProofBundle } from './evidenceService';
 import { buildPaymentReceipt, writePaymentReceipt } from './paymentReceiptService';
 import { loadConfiguredMandates } from './mandateConfigService';
+import { AgentMemoryService } from './agentMemoryService';
 import type { HandshakeRequest, HandshakeResponse, NegotiationOffer, NegotiationResponse, DeliveryNotification } from '../types/messages';
 import adEscrowArtifact from '../artifacts/contracts/AdEscrow.sol/AdEscrow.json';
 import intentRegistryArtifact from '../artifacts/contracts/IntentRegistry.sol/IntentRegistry.json';
@@ -76,6 +77,7 @@ interface TheaterRuntime {
 export class AgentTheaterService {
   private runtime: TheaterRuntime | null = null;
   private readonly stateFile = cachePath('two-agent-theater-state.json');
+  private readonly memory = new AgentMemoryService();
 
   async reset(options: { allowLocalDelivery?: boolean } = {}) {
     await this.dispose();
@@ -300,6 +302,26 @@ export class AgentTheaterService {
       runtime.proofId = proof.bundle.proofId;
       runtime.proofHash = proof.bundle.finalHash;
       runtime.receiptId = paymentReceipt.receiptId;
+      await Promise.all([
+        this.memory.rememberSettlement({
+          role: 'sponsor',
+          wallet: runtime.sponsorAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: runtime.paymentPath,
+          source: 'two-agent-theater',
+        }),
+        this.memory.rememberSettlement({
+          role: 'community',
+          wallet: runtime.communityAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: runtime.paymentPath,
+          source: 'two-agent-theater',
+        }),
+      ]);
     }
 
     this.event('sponsor', 'Settlement verified', `Sponsor Agent verified delivery and settlement closed. Receipt ${runtime.receiptId ?? 'written'}.`, {
