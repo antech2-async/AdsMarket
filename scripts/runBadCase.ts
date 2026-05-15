@@ -61,9 +61,6 @@ export async function runBadCase() {
   (community as any).lastAdResetTimestamp = Date.now();
   (community as any).erc8004.getAgentWallet = async () => sponsorAccount.address;
 
-  await sponsor.persistMandate();
-  await community.persistMandate();
-
   const handshake: HandshakeRequest = {
     type: 'HANDSHAKE_REQUEST',
     senderAgentId: sponsorAgentId.toString(),

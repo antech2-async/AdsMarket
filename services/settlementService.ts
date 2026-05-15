@@ -32,11 +32,23 @@ export class SettlementService {
     console.log(`[Settlement] Escrow ${params.escrowId} registered. Settles at ${new Date(Date.now() + params.settleAfterMs).toISOString()}`);
   }
 
-  async processSettlements(): Promise<void> {
+  async processSettlements(): Promise<Array<{
+    escrowId: string;
+    status: 'pending' | 'settled' | 'disputed' | 'failed';
+    error?: string;
+  }>> {
     const now = Date.now();
+    const results: Array<{
+      escrowId: string;
+      status: 'pending' | 'settled' | 'disputed' | 'failed';
+      error?: string;
+    }> = [];
 
     for (const [escrowId, settlement] of this.pendingSettlements.entries()) {
-      if (now < settlement.settleAfter) continue;
+      if (now < settlement.settleAfter) {
+        results.push({ escrowId, status: 'pending' });
+        continue;
+      }
 
       try {
         const verified = await settlement.sponsorAgent.verifyDelivery(settlement.deliveryProof);
@@ -59,6 +71,7 @@ export class SettlementService {
           );
 
           console.log(`[Settlement] ERC-8004 reputation updated for both agents.`);
+          results.push({ escrowId, status: 'settled' });
         } else {
           await settlement.escrowContract.write.dispute([BigInt(escrowId)]);
           console.log(`[Settlement] Escrow ${escrowId} DISPUTED. Admin review required.`);
@@ -69,13 +82,21 @@ export class SettlementService {
             'sponsorship.delivery.failed',
             'ipfs://QmNegativeFeedback'
           );
+          results.push({ escrowId, status: 'disputed' });
         }
 
         this.pendingSettlements.delete(escrowId);
       } catch (err) {
         console.error(`[Settlement] Error processing escrow ${escrowId}:`, err);
+        results.push({
+          escrowId,
+          status: 'failed',
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
+
+    return results;
   }
 
   startProcessingLoop(intervalMs = 30_000): void {

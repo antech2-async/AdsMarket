@@ -37,8 +37,8 @@ export function defaultSponsorMandate(): SponsorMandate {
 export function defaultCommunityMandate(): CommunityMandate {
   return {
     platform: 'discord',
-    guildId: process.env.DEMO_DISCORD_GUILD_ID || 'local-guild',
-    channelId: process.env.DEMO_DISCORD_CHANNEL_ID || 'local-channel',
+    guildId: process.env.DEMO_DISCORD_GUILD_ID || '1504701050899271741',
+    channelId: process.env.DEMO_DISCORD_CHANNEL_ID || '1504701289827930153',
     memberCount: Number(process.env.COMMUNITY_MEMBER_COUNT ?? 847),
     priceFloorUsdc: Number(process.env.COMMUNITY_PRICE_FLOOR_USDC ?? 25),
     minSponsorScore: Number(process.env.COMMUNITY_MIN_SPONSOR_SCORE ?? 70),

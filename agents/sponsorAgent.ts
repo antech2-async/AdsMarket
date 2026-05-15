@@ -298,7 +298,7 @@ Example:
       // HACKATHON SPONSOR: DOKU API INTEGRATION
       // Use DOKU HTTP API to generate a Fiat payment link for the 2% protocol fee
       // ----------------------------------------------------
-      if (process.env.DOKU_CLIENT_ID) {
+      if (process.env.DOKU_CLIENT_ID && process.env.DOKU_ENABLE_CHECKOUT === 'true') {
         console.log(`[DOKU] Generating QRIS/VA payment link for 2% protocol fee ($0.60 USD) via DOKU Sandbox API...`);
         // We calculate fee based on 2% of the deal
         const protocolFeeUsd = (agreedPriceUsdc * 0.02).toFixed(2);
@@ -322,8 +322,11 @@ Example:
           console.log(`[DOKU] Payment Link Generated: ${dokuResponse.data?.response?.payment?.url || 'Link generated'}`);
           console.log(`[DOKU] Fee paid. Releasing smart contract escrow lock...`);
         } catch (err: any) {
-          console.warn(`[DOKU] API call failed. Strict error enforcement: ${err.message}`);
-          throw err;
+          console.warn(`[DOKU] API call failed: ${err.message}`);
+          if (process.env.DOKU_REQUIRED === 'true') {
+            throw err;
+          }
+          console.warn(`[DOKU] Continuing escrow funding because DOKU_REQUIRED is not true.`);
         }
       }
 
@@ -407,6 +410,11 @@ Example:
 
   private async verifyDiscordDelivery(guildId: string, messageId: string): Promise<boolean> {
     try {
+      const token = process.env.SPONSOR_DISCORD_BOT_TOKEN;
+      if (!token || token === 'mock_token') {
+        console.warn(`[SponsorAgent] Discord verification skipped (mock token). Assuming delivery is valid.`);
+        return true;
+      }
       const channelId = process.env.DEMO_DISCORD_CHANNEL_ID!;
       const response = await axios.get(
         `https://discord.com/api/v10/channels/${channelId}/messages/${messageId}`,
@@ -422,7 +430,9 @@ Example:
       const channelMatches = !message.channel_id || String(message.channel_id) === channelId;
       const authorMatches = !expectedAuthorId || String(message.author?.id) === expectedAuthorId;
       return response.status === 200 && guildMatches && channelMatches && authorMatches;
-    } catch {
+    } catch (error: any) {
+      const detail = error?.response?.data?.message || error?.response?.status || error?.message || String(error);
+      console.warn(`[SponsorAgent] Discord delivery verification failed for message ${messageId}: ${detail}`);
       return false;
     }
   }

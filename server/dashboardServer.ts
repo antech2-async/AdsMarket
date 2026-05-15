@@ -92,6 +92,36 @@ async function loadFreshEnv() {
   return { ...process.env, ...parsed };
 }
 
+function openClawProcess(env: NodeJS.ProcessEnv, args: string[]) {
+  const configuredBin = String(env.OPENCLAW_BIN ?? '').trim();
+  if (configuredBin) {
+    return {
+      command: configuredBin,
+      args,
+      display: `${configuredBin} ${args.join(' ')}`,
+    };
+  }
+
+  if (process.platform === 'win32') {
+    return {
+      command: process.execPath,
+      args: [
+        path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js'),
+        '-y',
+        'openclaw',
+        ...args,
+      ],
+      display: `npx -y openclaw ${args.join(' ')}`,
+    };
+  }
+
+  return {
+    command: 'npx',
+    args: ['-y', 'openclaw', ...args],
+    display: `npx -y openclaw ${args.join(' ')}`,
+  };
+}
+
 async function bridgeHealthy() {
   try {
     const response = await fetch('http://127.0.0.1:4020/openclaw/health');
@@ -482,17 +512,19 @@ app.post('/api/run/openclaw-gemini', async (req, res) => {
       '--timeout',
       '300',
     ];
-    runLogs.push(`[Dashboard] Launching: openclaw ${args.filter((arg) => arg !== message).join(' ')} "<agent prompt>"`);
+    const env = await loadFreshEnv();
+    const openclaw = openClawProcess(env, args);
+    runLogs.push(`[Dashboard] Launching: ${openclaw.display.replace(message, '<agent prompt>')}`);
     await writeRunState({ logs: runLogs.slice(-260) });
 
-    const run = spawn('openclaw', args, {
+    const run = spawn(openclaw.command, openclaw.args, {
       cwd: ROOT,
-      env: await loadFreshEnv(),
-      shell: true,
+      env,
       windowsHide: true,
     });
     activeRun = run;
     let stdout = '';
+    let stderr = '';
     runLogs.push('[Dashboard] OpenClaw process started. Waiting for Gemini to call the AdSourcing tool...');
     await writeRunState({ logs: runLogs.slice(-260) });
 
@@ -504,6 +536,7 @@ app.post('/api/run/openclaw-gemini', async (req, res) => {
         return;
       }
 
+      stderr += text;
       const lines = text
         .split(/\r?\n/)
         .filter(Boolean)
@@ -532,6 +565,10 @@ app.post('/api/run/openclaw-gemini', async (req, res) => {
     run.on('exit', async (code) => {
       const openclawResult = tryParseOpenClawResult(stdout);
       const verifiedEvidence = await latestVerifiedEvidence();
+      if (code !== 0 && stderr.trim()) {
+        runLogs.push('[Dashboard] OpenClaw stderr:');
+        runLogs.push(...stderr.split(/\r?\n/).filter(Boolean).slice(-20));
+      }
       if (openclawResult?.text) {
         runLogs.push('[Dashboard] OpenClaw final summary:');
         runLogs.push(openclawResult.text);
@@ -564,15 +601,15 @@ async function runOpenClawCliStep(options: {
   runLogs: string[];
   label: string;
 }) {
-  options.runLogs.push(`[OpenClaw ${options.label}] openclaw ${options.command.join(' ')}`);
-  await writeRunState({ logs: options.runLogs.slice(-260) });
   const env = await loadFreshEnv();
+  const openclaw = openClawProcess(env, options.command);
+  options.runLogs.push(`[OpenClaw ${options.label}] ${openclaw.display}`);
+  await writeRunState({ logs: options.runLogs.slice(-260) });
 
   return new Promise<string>((resolve, reject) => {
-    const run = spawn('openclaw', options.command, {
+    const run = spawn(openclaw.command, openclaw.args, {
       cwd: ROOT,
       env,
-      shell: true,
       windowsHide: true,
     });
     activeRun = run;
@@ -637,12 +674,12 @@ async function runOpenClawPrompt(options: {
   options.runLogs.push(`[OpenClaw ${options.label}] Launching session ${options.sessionId}.`);
   await writeRunState({ logs: options.runLogs.slice(-260) });
   const env = await loadFreshEnv();
+  const openclaw = openClawProcess(env, args);
 
   return new Promise<any>((resolve, reject) => {
-    const run = spawn('openclaw', args, {
+    const run = spawn(openclaw.command, openclaw.args, {
       cwd: ROOT,
       env,
-      shell: true,
       windowsHide: true,
     });
     activeRun = run;

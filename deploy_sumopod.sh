@@ -12,15 +12,16 @@ echo "Deploying AdMarket Protocol..."
 echo "Sumopod Token: $SUMOPOD_TOKEN"
 
 # 1. Update and install prerequisites
-sudo apt-get update
-sudo apt-get install -y curl git build-essential
+sudo dnf update -y
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y curl git unzip
 
 # 2. Install Node.js 20.x
 if ! command -v node &> /dev/null
 then
     echo "Installing Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+    sudo dnf install -y nodejs
 fi
 
 # 3. Install PM2 globally
@@ -30,8 +31,8 @@ then
     sudo npm install -g pm2
 fi
 
-# 4. Navigate to app directory (assuming repo is cloned in ~/AdMarket)
-cd ~/AdMarket || { echo "Directory ~/AdMarket not found. Please clone the repo first."; exit 1; }
+# 4. Navigate to app directory
+cd ~/AdsMarket || { echo "Directory ~/AdsMarket not found. Please clone the repo first."; exit 1; }
 
 # 5. Install dependencies
 echo "Installing project dependencies..."

@@ -62,12 +62,12 @@ async function botCheck(label: string, envName: string): Promise<{ check: Check;
   }
 }
 
-async function channelCheck(token: string | undefined): Promise<{ check: Check; guildId?: string }> {
+async function channelCheck(label: string, token: string | undefined): Promise<{ check: Check; guildId?: string }> {
   const channelId = process.env.DEMO_DISCORD_CHANNEL_ID;
   if (!filled(channelId)) {
     return {
       check: {
-        id: 'discord.channel',
+        id: `discord.${label}.channel`,
         ok: false,
         detail: 'DEMO_DISCORD_CHANNEL_ID is missing or blank.',
       },
@@ -76,9 +76,9 @@ async function channelCheck(token: string | undefined): Promise<{ check: Check; 
   if (!filled(token)) {
     return {
       check: {
-        id: 'discord.channel',
+        id: `discord.${label}.channel`,
         ok: false,
-        detail: 'Cannot validate channel until at least one Discord bot token is set.',
+        detail: `Cannot validate channel until ${label} bot token is set.`,
       },
     };
   }
@@ -91,10 +91,10 @@ async function channelCheck(token: string | undefined): Promise<{ check: Check; 
     return {
       guildId,
       check: {
-        id: 'discord.channel',
+        id: `discord.${label}.channel`,
         ok: guildMatches,
         detail: guildMatches
-          ? `Channel ${channel.name ?? channel.id} is visible. guild_id=${guildId ?? 'n/a'}.`
+          ? `${label} bot can see channel ${channel.name ?? channel.id}. guild_id=${guildId ?? 'n/a'}.`
           : `Channel guild_id=${guildId}; DEMO_DISCORD_GUILD_ID=${configuredGuild}.`,
         suggestion: guildId && !filled(configuredGuild) ? `DEMO_DISCORD_GUILD_ID=${guildId}` : undefined,
       },
@@ -102,10 +102,39 @@ async function channelCheck(token: string | undefined): Promise<{ check: Check; 
   } catch (error) {
     return {
       check: {
-        id: 'discord.channel',
+        id: `discord.${label}.channel`,
         ok: false,
-        detail: `Channel could not be read: ${error instanceof Error ? error.message : String(error)}`,
+        detail: `${label} bot could not read channel: ${error instanceof Error ? error.message : String(error)}`,
       },
+    };
+  }
+}
+
+async function messageReadCheck(label: string, token: string | undefined): Promise<Check> {
+  const channelId = process.env.DEMO_DISCORD_CHANNEL_ID;
+  if (!filled(channelId) || !filled(token)) {
+    return {
+      id: `discord.${label}.messageRead`,
+      ok: false,
+      detail: `Cannot validate ${label} message reads until channel and token are set.`,
+    };
+  }
+
+  try {
+    await discordGet(token, `/channels/${channelId}/messages?limit=1`);
+    return {
+      id: `discord.${label}.messageRead`,
+      ok: true,
+      detail: `${label} bot can read message history in the delivery channel.`,
+    };
+  } catch (error) {
+    return {
+      id: `discord.${label}.messageRead`,
+      ok: false,
+      detail: `${label} bot cannot read delivery messages: ${error instanceof Error ? error.message : String(error)}`,
+      suggestion: label === 'sponsor'
+        ? 'Invite the Sponsor bot to the server and grant View Channel + Read Message History for the demo channel.'
+        : 'Grant the Community bot View Channel + Read Message History for the demo channel.',
     };
   }
 }
@@ -147,8 +176,13 @@ async function main() {
     if (!filled(configured)) derived.COMMUNITY_DISCORD_BOT_USER_ID = community.id;
   }
 
-  const channel = await channelCheck(process.env.SPONSOR_DISCORD_BOT_TOKEN || process.env.COMMUNITY_DISCORD_BOT_TOKEN);
+  const channel = await channelCheck('community', process.env.COMMUNITY_DISCORD_BOT_TOKEN);
   checks.push(channel.check);
+  if (sponsor.id) {
+    const sponsorChannel = await channelCheck('sponsor', process.env.SPONSOR_DISCORD_BOT_TOKEN);
+    checks.push(sponsorChannel.check);
+    checks.push(await messageReadCheck('sponsor', process.env.SPONSOR_DISCORD_BOT_TOKEN));
+  }
   if (channel.guildId && !filled(process.env.DEMO_DISCORD_GUILD_ID)) {
     derived.DEMO_DISCORD_GUILD_ID = channel.guildId;
   }

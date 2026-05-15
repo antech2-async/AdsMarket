@@ -204,6 +204,66 @@ function renderRedteam(redteam) {
   `;
 }
 
+function latestByTime(items = []) {
+  return [...items].sort((a, b) => Number(b.generatedAt ?? b.updatedAt ?? 0) - Number(a.generatedAt ?? a.updatedAt ?? 0))[0] || null;
+}
+
+function firstDefined(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== '');
+}
+
+function renderRegistry(data) {
+  const theater = data?.theater || {};
+  const mandates = data?.mandates || {};
+  const latestProof = latestByTime(data?.proofs || []);
+  const latestPayment = latestByTime(data?.payments || []);
+  const sponsorMandate = mandates.sponsor || {};
+  const communityMandate = mandates.community || {};
+  const sponsorScore = firstDefined(theater.handshake?.sponsorScore, latestProof?.reputationSources?.sponsor?.score, data?.memory?.sponsor?.score);
+  const communityScore = firstDefined(theater.handshake?.communityScore, latestProof?.reputationSources?.community?.score, data?.memory?.community?.score);
+  const chain = latestProof?.chain || {};
+  const status = theater.status || data?.runState?.status || latestPayment?.status || 'waiting';
+
+  const agents = [
+    { role: 'Sponsor Agent', side: 'sponsor', agentId: firstDefined(theater.sponsor?.agentId, sponsorMandate.agentId, 'not registered in current run'), wallet: firstDefined(theater.sponsor?.wallet, sponsorMandate.wallet, 'n/a'), score: sponsorScore, gate: 'Counterparty min score ' + (sponsorMandate.mandate?.minReputationScore ?? 'n/a'), action: theater.intent?.txHash ? 'broadcast ' + short(theater.intent.txHash) : 'waiting for intent' },
+    { role: 'Community Agent', side: 'community', agentId: firstDefined(theater.community?.agentId, communityMandate.agentId, 'not registered in current run'), wallet: firstDefined(theater.community?.wallet, communityMandate.wallet, 'n/a'), score: communityScore, gate: 'Sponsor min score ' + (communityMandate.mandate?.minSponsorScore ?? 'n/a'), action: theater.delivery?.deliveryProof ? 'delivered ' + short(theater.delivery.deliveryProof) : 'waiting for delivery' },
+  ];
+
+  $('#registry-status').textContent = status + ' | ' + (theater.mode || data?.runState?.mode || 'no run selected');
+  $('#registry-agent-grid').innerHTML = agents.map((agent) => [
+    '<article class="registry-card ' + agent.side + '">',
+    '<div class="registry-card-head">',
+    '<span class="label">' + escapeHtml(agent.role) + '</span>',
+    '<strong>' + escapeHtml(agent.score === undefined ? 'score n/a' : 'score ' + agent.score) + '</strong>',
+    '</div>',
+    '<dl>',
+    '<div><dt>ERC-8004 ID</dt><dd>' + escapeHtml(agent.agentId) + '</dd></div>',
+    '<div><dt>Owner wallet</dt><dd title="' + escapeHtml(agent.wallet) + '">' + escapeHtml(short(agent.wallet)) + '</dd></div>',
+    '<div><dt>Trust gate</dt><dd>' + escapeHtml(agent.gate) + '</dd></div>',
+    '<div><dt>Latest action</dt><dd>' + escapeHtml(agent.action) + '</dd></div>',
+    '</dl>',
+    '</article>',
+  ].join('')).join('');
+
+  const evidence = [
+    ['Identity registry', chain.intentRegistry || 'current theater local registry'],
+    ['Escrow contract', chain.escrowContract || theater.escrow?.txHash || 'not funded yet'],
+    ['Intent tx', theater.intent?.txHash || latestPayment?.txHashes?.[0] || 'n/a'],
+    ['Escrow tx', theater.escrow?.txHash || latestPayment?.txHashes?.[1] || 'n/a'],
+    ['Delivery proof', theater.delivery?.deliveryProof || 'n/a'],
+    ['Delivery tx', theater.delivery?.txHash || latestPayment?.txHashes?.[2] || 'n/a'],
+    ['Proof hash', theater.proof?.proofHash || latestPayment?.proofHash || latestProof?.finalHash || 'n/a'],
+    ['Payment receipt', theater.proof?.receiptId || latestPayment?.receiptId || 'n/a'],
+  ];
+  const chainLabel = chain.name ? chain.name + (chain.chainId ? ' / chain ' + chain.chainId : '') : 'VPS private ERC-8004-compatible demo chain';
+  $('#registry-source').textContent = chainLabel + ' | values update after each run';
+  $('#registry-evidence-grid').innerHTML = evidence.map(([label, value]) => [
+    '<article class="evidence-tile">',
+    '<span class="label">' + escapeHtml(label) + '</span>',
+    '<strong title="' + escapeHtml(value) + '">' + escapeHtml(short(value)) + '</strong>',
+    '</article>',
+  ].join('')).join('');
+}
 function renderMandates(mandates) {
   const sponsor = mandates?.sponsor?.mandate || {};
   const community = mandates?.community?.mandate || {};
@@ -1439,6 +1499,7 @@ async function loadCockpit() {
   renderNarrative(data.narrative);
   renderPov(data.narrative, data.runState, data.theater);
   renderFlowBoard(data);
+  renderRegistry(data);
 
   const proof = data.proofs?.[0];
   const currentPhase = theaterPhase(data.theater?.status) || activeDeal?.phase || proof?.phase || 'DISCOVERED';
@@ -1467,7 +1528,7 @@ $('#sponsor-intake-send').addEventListener('click', () => sendIntake('sponsor'))
 $('#community-intake-send').addEventListener('click', () => sendIntake('community'));
 $('#save-chat-mandates').addEventListener('click', saveChatMandates);
 $('#run-two-agent-theater').addEventListener('click', () => startTwoAgentTheater(true));
-$('#run-openclaw-duel').addEventListener('click', () => startOpenClawDuelRun(true));
+$('#run-openclaw-duel').addEventListener('click', () => startOpenClawDuelRun(false));
 $('#run-badcase').addEventListener('click', startBadCaseRun);
 $('#run-openclaw-gemini').addEventListener('click', () => startOpenClawGeminiRun(true));
 $('#run-openclaw-discord').addEventListener('click', () => startOpenClawGeminiRun(false));

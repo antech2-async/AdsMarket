@@ -71,7 +71,7 @@ function normalizeText(value: string): string {
 }
 
 const CONTENT_RULE_KEYWORDS: Record<string, string[]> = {
-  gambling: ['casino', 'bet', 'betting', 'gambling', 'lottery', 'wager', 'slots', 'jackpot'],
+  gambling: ['casino', 'bet', 'betting', 'gambling', 'lottery', 'wager', 'slot machine', 'casino slots', 'jackpot'],
   scam: ['scam', 'guaranteed return', 'guaranteed returns', 'guaranteed profit', 'no risk', 'risk free', '1000x', 'pure profit', 'get rich quick'],
   adult: ['adult', 'porn', 'xxx', 'nsfw', 'sexual'],
   medical: ['medical advice', 'cure', 'guaranteed cure', 'diagnose', 'prescription'],
@@ -95,6 +95,13 @@ function termsForRule(rule: string): string[] {
   return [...terms].filter(Boolean);
 }
 
+function includesBlockedTerm(normalizedCopy: string, term: string): boolean {
+  const normalizedTerm = normalizeText(term);
+  if (!normalizedTerm) return false;
+  const escaped = normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(^|\\s)${escaped}(\\s|$)`).test(normalizedCopy);
+}
+
 function contentChecks(contentRules: string[], adCopy: string): CheckInput[] {
   const normalizedCopy = normalizeText(adCopy);
   const checks: CheckInput[] = [];
@@ -111,7 +118,7 @@ function contentChecks(contentRules: string[], adCopy: string): CheckInput[] {
       continue;
     }
 
-    const matched = blockedTerms.filter((term) => normalizedCopy.includes(normalizeText(term)));
+    const matched = blockedTerms.filter((term) => includesBlockedTerm(normalizedCopy, term));
     checks.push({
       id: `content.rule.${normalizeText(rule).replace(/\s+/g, '-')}`,
       passed: matched.length === 0,
