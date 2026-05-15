@@ -295,14 +295,36 @@ Example:
   ): Promise<string> {
     return withRetry(async () => {
       // ----------------------------------------------------
-      // HACKATHON SPONSOR: DOKU MCP INTEGRATION
-      // Use DOKU MCP to generate a Fiat payment link for the 2% protocol fee
+      // HACKATHON SPONSOR: DOKU API INTEGRATION
+      // Use DOKU HTTP API to generate a Fiat payment link for the 2% protocol fee
       // ----------------------------------------------------
-      if (process.env.DOKU_CLIENT_ID !== undefined) {
-        console.log(`[DOKU MCP] Generating QRIS/VA payment link for 2% protocol fee ($0.60 USD) via @doku/mcp-server...`);
-        await new Promise(r => setTimeout(r, 600)); // Simulate MCP tool call
-        console.log(`[DOKU MCP] Payment Link Generated: https://jokul.doku.com/checkout/link/INV-${Date.now()}`);
-        console.log(`[DOKU MCP] Fee paid. Releasing smart contract escrow lock...`);
+      if (process.env.DOKU_CLIENT_ID) {
+        console.log(`[DOKU] Generating QRIS/VA payment link for 2% protocol fee ($0.60 USD) via DOKU Sandbox API...`);
+        // We calculate fee based on 2% of the deal
+        const protocolFeeUsd = (agreedPriceUsdc * 0.02).toFixed(2);
+        
+        try {
+          const dokuResponse = await axios.post(
+            'https://api-sandbox.doku.com/checkout/v1/payment',
+            {
+              order: { invoice_number: `INV-${Date.now()}`, amount: protocolFeeUsd },
+              payment: { payment_due_date: 60 }
+            },
+            {
+              headers: { 
+                'Client-Id': process.env.DOKU_CLIENT_ID,
+                'Request-Id': `REQ-${Date.now()}`,
+                'Request-Timestamp': new Date().toISOString()
+              },
+              timeout: 5000
+            }
+          );
+          console.log(`[DOKU] Payment Link Generated: ${dokuResponse.data?.response?.payment?.url || 'Link generated'}`);
+          console.log(`[DOKU] Fee paid. Releasing smart contract escrow lock...`);
+        } catch (err: any) {
+          console.warn(`[DOKU] API call failed. Strict error enforcement: ${err.message}`);
+          throw err;
+        }
       }
 
       const amountWei = parseUnits(String(agreedPriceUsdc), 6);

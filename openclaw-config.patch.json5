@@ -1,5 +1,8 @@
 {
   plugins: {
+    slots: {
+      memory: "mem9"
+    },
     entries: {
       adsourcing: {
         enabled: true,
@@ -7,6 +10,13 @@
           bridgeUrl: "http://127.0.0.1:4020/openclaw",
         },
       },
+      mem9: {
+        enabled: true,
+        hooks: {
+          allowConversationAccess: true
+        },
+        config: {}
+      }
     },
   },
   mcp: {
