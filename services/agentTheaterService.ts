@@ -11,6 +11,8 @@ import { SettlementService } from './settlementService';
 import { writeProofBundle } from './evidenceService';
 import { buildPaymentReceipt, writePaymentReceipt } from './paymentReceiptService';
 import { loadConfiguredMandates } from './mandateConfigService';
+import { AgentMemoryService } from './agentMemoryService';
+import { DokuService } from './dokuService';
 import type { HandshakeRequest, HandshakeResponse, NegotiationOffer, NegotiationResponse, DeliveryNotification } from '../types/messages';
 import adEscrowArtifact from '../artifacts/contracts/AdEscrow.sol/AdEscrow.json';
 import intentRegistryArtifact from '../artifacts/contracts/IntentRegistry.sol/IntentRegistry.json';
@@ -76,6 +78,8 @@ interface TheaterRuntime {
 export class AgentTheaterService {
   private runtime: TheaterRuntime | null = null;
   private readonly stateFile = cachePath('two-agent-theater-state.json');
+  private readonly memory = new AgentMemoryService();
+  private readonly doku = new DokuService();
 
   async reset(options: { allowLocalDelivery?: boolean } = {}) {
     await this.dispose();
@@ -295,11 +299,32 @@ export class AgentTheaterService {
         status: 'SETTLED',
         txHashes: [runtime.intentTx!, runtime.escrowTx!, runtime.delivery!.txHash],
         proofHash: proof.bundle.finalHash,
+        externalPaymentRail: await this.dokuReceipt(),
       });
       runtime.paymentPath = await writePaymentReceipt(paymentReceipt);
       runtime.proofId = proof.bundle.proofId;
       runtime.proofHash = proof.bundle.finalHash;
       runtime.receiptId = paymentReceipt.receiptId;
+      await Promise.all([
+        this.memory.rememberSettlement({
+          role: 'sponsor',
+          wallet: runtime.sponsorAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: runtime.paymentPath,
+          source: 'two-agent-theater',
+        }),
+        this.memory.rememberSettlement({
+          role: 'community',
+          wallet: runtime.communityAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: runtime.paymentPath,
+          source: 'two-agent-theater',
+        }),
+      ]);
     }
 
     this.event('sponsor', 'Settlement verified', `Sponsor Agent verified delivery and settlement closed. Receipt ${runtime.receiptId ?? 'written'}.`, {
@@ -402,6 +427,25 @@ export class AgentTheaterService {
   private async writeState() {
     await fs.mkdir(path.dirname(this.stateFile), { recursive: true });
     await fs.writeFile(this.stateFile, JSON.stringify(this.snapshot(), bigintReplacer, 2), 'utf-8');
+  }
+
+  private async dokuReceipt() {
+    const status = await this.doku.status();
+    if (!status.enabled) return { provider: 'doku' as const, status: 'SKIPPED' as const };
+    if (status.lastCheckoutAt && status.lastInvoiceNumber) {
+      return {
+        provider: 'doku' as const,
+        status: status.lastError ? 'FAILED' as const : 'CREATED' as const,
+        invoiceNumber: status.lastInvoiceNumber,
+        paymentUrl: status.lastPaymentUrl,
+        error: status.lastError,
+      };
+    }
+    return {
+      provider: 'doku' as const,
+      status: status.configured ? 'SKIPPED' as const : 'FAILED' as const,
+      error: status.configured ? undefined : 'DOKU credentials are not configured.',
+    };
   }
 }
 

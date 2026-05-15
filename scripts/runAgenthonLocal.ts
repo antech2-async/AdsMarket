@@ -10,6 +10,8 @@ import { writeProofBundle } from '../services/evidenceService';
 import { buildPaymentReceipt, writePaymentReceipt } from '../services/paymentReceiptService';
 import { loadConfiguredMandates } from '../services/mandateConfigService';
 import { PersistenceService } from '../services/persistenceService';
+import { AgentMemoryService } from '../services/agentMemoryService';
+import { DokuService } from '../services/dokuService';
 import { NegotiationResponse } from '../types/messages';
 import { REPO_ROOT } from '../services/pathConfig';
 import mockUsdcArtifact from '../artifacts/contracts/MockUSDC.sol/MockUSDC.json';
@@ -338,8 +340,30 @@ export async function runAgenthonLocal() {
         status: 'SETTLED',
         txHashes: [intentTx, escrowTx, delivery.txHash],
         proofHash: proof.bundle.finalHash,
+        externalPaymentRail: await dokuReceipt(),
       });
       const paymentPath = await writePaymentReceipt(paymentReceipt);
+      const memory = new AgentMemoryService();
+      await Promise.all([
+        memory.rememberSettlement({
+          role: 'sponsor',
+          wallet: sponsorAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: paymentPath,
+          source: 'agenthon-local',
+        }),
+        memory.rememberSettlement({
+          role: 'community',
+          wallet: communityAccount.address,
+          deal: communityDeal,
+          proofHash: proof.bundle.finalHash,
+          receiptId: paymentReceipt.receiptId,
+          paymentReceiptPath: paymentPath,
+          source: 'agenthon-local',
+        }),
+      ]);
       console.log(`[AgenthonLocal] Proof bundle: ${proof.filePath}`);
       console.log(`[AgenthonLocal] Payment receipt: ${paymentPath}`);
     }
@@ -356,6 +380,25 @@ export async function runAgenthonLocal() {
       console.log('[AgenthonLocal] Stopped local Hardhat node.');
     }
   }
+}
+
+async function dokuReceipt() {
+  const status = await new DokuService().status();
+  if (!status.enabled) return { provider: 'doku' as const, status: 'SKIPPED' as const };
+  if (status.lastCheckoutAt && status.lastInvoiceNumber) {
+    return {
+      provider: 'doku' as const,
+      status: status.lastError ? 'FAILED' as const : 'CREATED' as const,
+      invoiceNumber: status.lastInvoiceNumber,
+      paymentUrl: status.lastPaymentUrl,
+      error: status.lastError,
+    };
+  }
+  return {
+    provider: 'doku' as const,
+    status: status.configured ? 'SKIPPED' as const : 'FAILED' as const,
+    error: status.configured ? undefined : 'DOKU credentials are not configured.',
+  };
 }
 
 if (require.main === module) {
