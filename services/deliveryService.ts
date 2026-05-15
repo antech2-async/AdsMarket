@@ -50,8 +50,7 @@ export class DeliveryService {
     const message = await Promise.race([sendPromise, timeoutPromise]) as any;
     console.log(`[DeliveryService] Discord message sent. ID: ${message.id}`);
     
-    // Auto-monitor via Repliz
-    await this.repliz.monitorPostEngagement('discord', message.id);
+    await this.repliz.recordDiscordDelivery(message.id);
     
     return message.id;
   }

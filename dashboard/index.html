@@ -33,6 +33,7 @@
           <div class="trust-pills" aria-label="Protocol capabilities">
             <span>ERC-8004-style Identity</span>
             <span>Policy Gates</span>
+            <span>DOKU Prefund</span>
             <span>USDC Escrow</span>
             <span>Payment Receipt</span>
           </div>
@@ -166,8 +167,8 @@
         <div class="section-head">
           <div>
             <p class="eyebrow">DOKU Payment Rail</p>
-            <h2>Generate checkout sponsor dari dashboard, bukan cuma status text.</h2>
-            <p>Panel ini memanggil DOKU sandbox via backend. Credential tetap di server; browser hanya menerima invoice dan payment link.</p>
+            <h2>Top-up sponsor mandate sebelum agent mulai membeli placement.</h2>
+            <p>Panel ini memanggil DOKU sandbox via backend. Di demo, invoice ini menjadi bukti pre-fund; escrow settlement tetap memakai local USDC.</p>
           </div>
           <span id="doku-status-pill" class="rail-pill">checking DOKU</span>
         </div>
@@ -183,18 +184,18 @@
           </article>
           <article class="doku-card doku-form-card">
             <span class="label">Sponsor Checkout</span>
-            <strong>Buat payment link DOKU sandbox</strong>
+            <strong>Buat DOKU top-up sandbox</strong>
             <div class="doku-form">
               <label>Amount USD equivalent <input id="doku-amount" type="number" min="1" step="1" value="1"></label>
-              <label class="wide">Description <textarea id="doku-description" rows="2">AdSourcing sponsor checkout for community ad escrow</textarea></label>
-              <button id="doku-create-checkout" type="button">Generate DOKU Checkout</button>
+              <label class="wide">Description <textarea id="doku-description" rows="2">AdSourcing sponsor top-up for autonomous community ad buying mandate</textarea></label>
+              <button id="doku-create-checkout" type="button">Generate DOKU Top-up</button>
             </div>
           </article>
           <article class="doku-card doku-result-card">
             <span class="label">Checkout Result</span>
             <strong id="doku-result-title">No checkout generated yet</strong>
-            <p id="doku-result-copy">Run a checkout or complete an agent flow to attach a DOKU invoice to the payment evidence.</p>
-            <a id="doku-payment-link" class="doku-link disabled" href="#" target="_blank" rel="noreferrer">Open DOKU Checkout</a>
+            <p id="doku-result-copy">Run a top-up or complete an agent flow to attach a DOKU invoice to the sponsor mandate evidence.</p>
+            <a id="doku-payment-link" class="doku-link disabled" href="#" target="_blank" rel="noreferrer">Open DOKU Top-up</a>
           </article>
         </div>
       </section>

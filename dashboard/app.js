@@ -249,8 +249,8 @@ function renderRegistry(data) {
     : 'Mem9 not configured for runtime writes';
   const doku = data?.doku || {};
   const dokuState = doku.enabled
-    ? (doku.configured ? (doku.lastPaymentUrl ? 'DOKU checkout ready' : 'DOKU configured, waiting for checkout') : 'DOKU enabled but credentials missing')
-    : 'DOKU checkout disabled';
+    ? (doku.configured ? (doku.lastPaymentUrl ? 'DOKU top-up ready' : 'DOKU configured, waiting for top-up') : 'DOKU enabled but credentials missing')
+    : 'DOKU top-up disabled';
 
   const agents = [
     { role: 'Sponsor Agent', side: 'sponsor', agentId: firstDefined(theater.sponsor?.agentId, sponsorMandate.agentId, 'not registered in current run'), wallet: firstDefined(theater.sponsor?.wallet, sponsorMandate.wallet, 'n/a'), score: sponsorScore, gate: 'Counterparty min score ' + (sponsorMandate.mandate?.minReputationScore ?? 'n/a'), action: theater.intent?.txHash ? 'broadcast ' + short(theater.intent.txHash) : 'waiting for intent' },
@@ -303,7 +303,7 @@ function renderDokuRail(doku = {}) {
     ? 'Disabled'
     : configured
       ? doku.lastPaymentUrl
-        ? 'Checkout ready'
+        ? 'Top-up ready'
         : 'Configured'
       : 'Missing credentials';
   const pill = $('#doku-status-pill');
@@ -329,17 +329,17 @@ function renderDokuRail(doku = {}) {
   if (!title || !copy || !link) return;
 
   if (doku.lastPaymentUrl) {
-    title.textContent = doku.lastInvoiceNumber || 'DOKU checkout generated';
+    title.textContent = doku.lastInvoiceNumber || 'DOKU top-up generated';
     copy.textContent = doku.lastCheckoutAt
-      ? `Generated ${new Date(doku.lastCheckoutAt).toLocaleTimeString()}. Sandbox link is ready for sponsor-side payment review.`
-      : 'Sandbox link is ready for sponsor-side payment review.';
+      ? `Generated ${new Date(doku.lastCheckoutAt).toLocaleTimeString()}. Sandbox top-up link is ready before the agent spends.`
+      : 'Sandbox top-up link is ready before the agent spends.';
     link.href = doku.lastPaymentUrl;
     link.classList.remove('disabled');
   } else {
-    title.textContent = doku.lastError ? 'DOKU checkout failed' : 'No checkout generated yet';
+    title.textContent = doku.lastError ? 'DOKU top-up failed' : 'No top-up generated yet';
     copy.textContent = doku.lastError || (configured
-      ? 'Generate a checkout to show the external fiat rail beside the on-chain escrow.'
-      : 'Configure DOKU env on the server to enable sandbox checkout generation.');
+      ? 'Generate a sponsor top-up to show how the agent gets a funded mandate before buying.'
+      : 'Configure DOKU env on the server to enable sandbox top-up generation.');
     link.href = '#';
     link.classList.add('disabled');
   }
@@ -364,25 +364,25 @@ async function createDokuCheckout() {
   const title = $('#doku-result-title');
   const copy = $('#doku-result-copy');
   button.disabled = true;
-  title.textContent = 'Generating DOKU checkout...';
-  copy.textContent = 'Calling the backend DOKU MCP rail. No secret is sent to the browser.';
+  title.textContent = 'Generating DOKU top-up...';
+  copy.textContent = 'Calling the backend DOKU MCP rail before agent spending. No secret is sent to the browser.';
   try {
     const response = await fetch('/api/doku/checkout', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         amountUsd: Number($('#doku-amount')?.value || 1),
-        description: $('#doku-description')?.value || 'AdSourcing sponsor checkout',
+        description: $('#doku-description')?.value || 'AdSourcing sponsor top-up',
         sponsorWallet: cockpitData?.theater?.sponsor?.wallet || cockpitData?.mandates?.sponsor?.wallet,
         communityWallet: cockpitData?.theater?.community?.wallet || cockpitData?.mandates?.community?.wallet,
       }),
     });
     const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.checkout?.error || data.error || 'DOKU checkout failed');
+    if (!response.ok || !data.ok) throw new Error(data.checkout?.error || data.error || 'DOKU top-up failed');
     cockpitData = { ...(cockpitData || {}), doku: data.doku };
     renderDokuRail(data.doku);
   } catch (error) {
-    title.textContent = 'DOKU checkout failed';
+    title.textContent = 'DOKU top-up failed';
     copy.textContent = error.message;
   } finally {
     await loadCockpit();
@@ -967,17 +967,24 @@ function renderModeCard([title, tag, detail]) {
 
 function renderNarrative(narrative) {
   if (!narrative) return;
+  const doku = cockpitData?.doku || {};
   $('#narrative-headline').textContent = localNarrativeHeadline(narrative.headline);
   $('#narrative-mode').textContent = cockpitData?.runState?.mode || 'agent evidence';
 
   $('#story-sponsor').textContent = narrative.sponsor?.wallet ? short(narrative.sponsor.wallet) : 'Sponsor Agent';
-  $('#story-sponsor-detail').textContent = `Offer ${money(narrative.sponsor?.offerUsdc)} masih di bawah max budget ${money(narrative.sponsor?.maxBudgetUsdc)}.`;
+  $('#story-sponsor-detail').textContent = [
+    `Offer ${money(narrative.sponsor?.offerUsdc)} masih di bawah max budget ${money(narrative.sponsor?.maxBudgetUsdc)}.`,
+    doku.lastInvoiceNumber ? `Mandate didanai via DOKU invoice ${doku.lastInvoiceNumber}.` : 'DOKU top-up belum dibuat.',
+  ].join(' ');
 
   $('#story-community').textContent = narrative.community?.wallet ? short(narrative.community.wallet) : 'Community Agent';
   $('#story-community-detail').textContent = `Floor ${money(narrative.community?.floorUsdc)}; decision ${narrative.community?.decision || 'pending'}.`;
 
   $('#story-escrow').textContent = narrative.escrow?.status || 'Menunggu';
-  $('#story-escrow-detail').textContent = `Amount ${money(narrative.escrow?.amountUsdc)}; payout ${money(narrative.escrow?.communityPayoutUsdc)}; fee ${money(narrative.escrow?.protocolFeeUsdc)}.`;
+  $('#story-escrow-detail').textContent = [
+    `Amount ${money(narrative.escrow?.amountUsdc)}; payout ${money(narrative.escrow?.communityPayoutUsdc)}; fee ${money(narrative.escrow?.protocolFeeUsdc)}.`,
+    doku.lastInvoiceNumber ? 'Escrow demo memakai local USDC setelah sponsor pre-fund DOKU tersedia.' : null,
+  ].filter(Boolean).join(' ');
 
   $('#story-proof').textContent = narrative.proof?.proofHash ? short(narrative.proof.proofHash) : short(narrative.proof?.receiptId || 'Belum ada receipt');
   $('#story-proof-detail').textContent = narrative.proof?.deliveryProof
@@ -1060,6 +1067,9 @@ function renderFlowBoard(data) {
   const communityAgentId = theater.community?.agentId || mandates.community?.agentId;
   const adCopy = sponsoredPostCopy(sponsorMandate.adCopy);
   const deliveryProof = theater.delivery?.deliveryProof || narrative.proof?.deliveryProof || 'delivery proof pending';
+  const doku = data?.doku || {};
+  const dokuInvoice = doku.lastInvoiceNumber || 'waiting';
+  const dokuUrl = doku.lastPaymentUrl || '';
 
   const progressPercent = phases.length > 1 ? Math.round((currentIndex / (phases.length - 1)) * 100) : 0;
   const motionLabel = isRejected
@@ -1091,6 +1101,7 @@ function renderFlowBoard(data) {
   $('#flow-sponsor-facts').innerHTML = renderFacts([
     ['Max price', money(theater.sponsor?.maxPriceUsdc ?? sponsorMandate.maxPricePerPostUsdc ?? narrative.sponsor?.maxBudgetUsdc)],
     ['Offer', money(offer)],
+    ['DOKU top-up', dokuInvoice],
     ['Sponsor score', handshake.sponsorScore ?? '78'],
   ]);
 
@@ -1106,6 +1117,16 @@ function renderFlowBoard(data) {
   ]);
 
   $('#flow-route').innerHTML = [
+    {
+      label: 'DOKU Prefund',
+      title: dokuUrl ? `Top-up ${dokuInvoice}` : 'Sponsor top-up pending',
+      body: dokuUrl
+        ? 'Sponsor funds an agent mandate through DOKU first; the agent can execute only inside that funded budget.'
+        : 'Production flow starts with sponsor top-up before autonomous buying begins.',
+      href: dokuUrl,
+      cta: 'Open DOKU Top-up',
+      doku: true,
+    },
     {
       label: 'Identity',
       title: handshake.accepted ? 'Identity verified' : 'Menunggu handshake',
@@ -1134,15 +1155,16 @@ function renderFlowBoard(data) {
       preview: true,
     },
   ].map((item) => `
-    <article class="route-card ${item.preview ? 'sponsored-preview' : ''}">
+    <article class="route-card ${item.preview ? 'sponsored-preview' : ''} ${item.doku ? 'doku-route' : ''}">
       <span>${escapeHtml(item.label)}</span>
       <strong>${escapeHtml(item.title)}</strong>
       <p>${escapeHtml(item.body)}</p>
+      ${item.href ? `<a href="${escapeHtml(item.href)}" target="_blank" rel="noreferrer">${escapeHtml(item.cta || 'Open')}</a>` : ''}
     </article>
   `).join('');
 
   const stepRows = [
-    ['DISCOVERED', 'Sponsor', 'Intent broadcast', 'Budget, audience floor, dan ad policy ditandatangani.', theater.intent?.txHash || activeDeal?.txHashes?.[0] || 'waiting'],
+    ['DISCOVERED', 'Sponsor', 'Prefund + intent', 'Sponsor mandate punya budget DOKU/top-up, audience floor, dan ad policy.', dokuUrl || theater.intent?.txHash || activeDeal?.txHashes?.[0] || 'waiting'],
     ['HANDSHAKE_VERIFIED', 'Community', 'Identity gate', 'Wallet, signature, score, dan inventory lolos.', handshake.accepted ? `score ${handshake.sponsorScore}` : 'waiting'],
     ['NEGOTIATING', 'Sponsor', `Offer ${money(offer)}`, 'SponsorAgent tetap di dalam max-price mandate.', theater.offer?.signature || 'waiting'],
     ['AGREED', 'Community', theater.response?.type ? `Decision ${theater.response.type}` : 'Terms decision', 'Floor price dan content policy menerima offer.', theater.response?.signature || 'waiting'],
