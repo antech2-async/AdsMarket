@@ -9,6 +9,14 @@
       },
     },
   },
+  mcp: {
+    servers: {
+      doku: {
+        command: "npx",
+        args: ["-y", "@doku/mcp-server"]
+      }
+    }
+  },
   tools: {
     profile: "minimal",
     allow: [
