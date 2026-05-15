@@ -26,6 +26,4 @@ export class ReplizService {
       throw err; // Strict crash as requested
     }
   }
-    }
-  }
 }
