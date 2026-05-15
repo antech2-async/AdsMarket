@@ -1,9 +1,11 @@
 import { Client, GatewayIntentBits, TextChannel, EmbedBuilder } from 'discord.js';
 import axios from 'axios';
+import { ReplizService } from './replizService';
 
 export class DeliveryService {
   private discordClient: Client;
   private discordReady = false;
+  private repliz = new ReplizService();
 
   constructor() {
     this.discordClient = new Client({
@@ -39,6 +41,10 @@ export class DeliveryService {
 
     const message = await channel.send({ embeds: [embed] });
     console.log(`[DeliveryService] Discord message sent. ID: ${message.id}`);
+    
+    // Auto-monitor via Repliz
+    await this.repliz.monitorPostEngagement('discord', message.id);
+    
     return message.id;
   }
 
