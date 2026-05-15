@@ -1,0 +1,31 @@
+{
+  "id": "adsourcing",
+  "name": "AdSourcing Agent Tools",
+  "version": "0.1.0",
+  "description": "Expose SponsorAgent and CommunityAgent workflows as OpenClaw tools.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "bridgeUrl": {
+        "type": "string",
+        "description": "Base URL for the AdSourcing OpenClaw bridge."
+      }
+    }
+  },
+  "activation": {
+    "onStartup": true,
+    "onCapabilities": ["tool"]
+  },
+  "contracts": {
+    "tools": [
+      "adsourcing_status",
+      "adsourcing_run_happy_path",
+      "adsourcing_run_bad_case",
+      "adsourcing_run_agenthon_local",
+      "adsourcing_save_sponsor_mandate",
+      "adsourcing_save_community_mandate",
+      "adsourcing_get_evidence"
+    ]
+  }
+}
