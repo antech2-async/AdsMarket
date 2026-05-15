@@ -109,9 +109,10 @@ async function ensureOpenClawBridge(runLogs: string[]) {
 
   if (!bridgeRun) {
     runLogs.push('[Dashboard] Starting AdSourcing OpenClaw bridge on :4020...');
-    const child = spawn('cmd.exe', ['/c', 'npm run openclaw:bridge'], {
+    const child = spawn('npm', ['run', 'openclaw:bridge'], {
       cwd: ROOT,
       env: await loadFreshEnv(),
+      shell: true,
       windowsHide: true,
     });
     bridgeRun = child;
@@ -395,12 +396,13 @@ app.post('/api/run/agenthon-local', async (req, res) => {
     logs: runLogs,
   });
 
-  const run = spawn('cmd.exe', ['/c', 'npm run agenthon:local'], {
+  const run = spawn('npm', ['run', 'agenthon:local'], {
     cwd: ROOT,
     env: {
       ...process.env,
       AGENTHON_ALLOW_LOCAL_DELIVERY: allowLocalDelivery ? 'true' : 'false',
     },
+    shell: true,
     windowsHide: true,
   });
   activeRun = run;
@@ -483,9 +485,10 @@ app.post('/api/run/openclaw-gemini', async (req, res) => {
     runLogs.push(`[Dashboard] Launching: openclaw ${args.filter((arg) => arg !== message).join(' ')} "<agent prompt>"`);
     await writeRunState({ logs: runLogs.slice(-260) });
 
-    const run = spawn('cmd.exe', ['/c', 'openclaw', ...args], {
+    const run = spawn('openclaw', args, {
       cwd: ROOT,
       env: await loadFreshEnv(),
+      shell: true,
       windowsHide: true,
     });
     activeRun = run;
@@ -566,9 +569,10 @@ async function runOpenClawCliStep(options: {
   const env = await loadFreshEnv();
 
   return new Promise<string>((resolve, reject) => {
-    const run = spawn('cmd.exe', ['/c', 'openclaw', ...options.command], {
+    const run = spawn('openclaw', options.command, {
       cwd: ROOT,
       env,
+      shell: true,
       windowsHide: true,
     });
     activeRun = run;
@@ -635,9 +639,10 @@ async function runOpenClawPrompt(options: {
   const env = await loadFreshEnv();
 
   return new Promise<any>((resolve, reject) => {
-    const run = spawn('cmd.exe', ['/c', 'openclaw', ...args], {
+    const run = spawn('openclaw', args, {
       cwd: ROOT,
       env,
+      shell: true,
       windowsHide: true,
     });
     activeRun = run;
@@ -840,9 +845,10 @@ app.post('/api/run/badcase', async (_req, res) => {
     logs: runLogs,
   });
 
-  const run = spawn('cmd.exe', ['/c', 'npm run badcase'], {
+  const run = spawn('npm', ['run', 'badcase'], {
     cwd: ROOT,
     env: await loadFreshEnv(),
+    shell: true,
     windowsHide: true,
   });
   activeRun = run;
