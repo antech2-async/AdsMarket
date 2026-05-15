@@ -17,18 +17,18 @@
           </div>
         </div>
         <nav class="top-actions" aria-label="Workspace actions">
-          <button id="refresh" type="button" title="Refresh workspace">Refresh</button>
+          <button id="refresh" type="button" title="Perbarui workspace">Perbarui</button>
           <button id="playback" type="button" title="Play phase replay">Play</button>
         </nav>
       </header>
 
       <section class="hero-grid" aria-label="AdSourcing sponsorship workspace">
         <article class="hero-copy">
-          <p class="eyebrow">Community Sponsorship Workspace</p>
-          <h2>Agentic sponsorship protocol with accountable settlement.</h2>
+          <p class="eyebrow">Ruang Kerja Sponsorship Komunitas</p>
+          <h2>Agent untuk menjalankan sponsorship komunitas dengan payment dan proof yang aman.</h2>
           <p class="hero-lede">
             SponsorAgent dan CommunityAgent menegosiasikan placement, memverifikasi identity,
-            mengunci payment di escrow, lalu menyelesaikan settlement setelah delivery proof tersedia.
+            mengunci dana di escrow, lalu menyelesaikan payment setelah delivery proof tersedia.
           </p>
           <div class="trust-pills" aria-label="Protocol capabilities">
             <span>ERC-8004-style Identity</span>
@@ -38,21 +38,21 @@
           </div>
           <div class="hero-actions">
             <button id="run-two-agent-theater" class="primary-action" type="button">
-              <strong>Start Sponsorship Flow</strong>
-              <span>Jalankan alur SponsorAgent dan CommunityAgent dari mandate sampai settlement.</span>
+              <strong>Mulai Negosiasi Agent</strong>
+              <span>Jalankan alur SponsorAgent dan CommunityAgent dari mandate sampai payment receipt.</span>
             </button>
             <button id="run-badcase" class="secondary-action danger" type="button">
-              <strong>Test Policy Rejection</strong>
-              <span>Buktikan unsafe sponsorship berhenti sebelum escrow.</span>
+              <strong>Uji Konten Berisiko</strong>
+              <span>Buktikan sponsorship berisiko berhenti sebelum escrow.</span>
             </button>
           </div>
         </article>
 
         <section class="deal-room" aria-label="Live sponsorship deal room">
           <article class="party-terminal sponsor-terminal">
-            <span class="label">Sponsor Brief</span>
+            <span class="label">Sponsor</span>
             <strong id="flow-sponsor-title">Budget mandate</strong>
-            <p id="flow-sponsor-detail">Waiting for sponsor state.</p>
+            <p id="flow-sponsor-detail">Menunggu state sponsor.</p>
             <div id="flow-sponsor-facts" class="fact-grid"></div>
           </article>
 
@@ -62,9 +62,9 @@
           </div>
 
           <article class="party-terminal community-terminal">
-            <span class="label">Community Inventory</span>
+            <span class="label">Komunitas</span>
             <strong id="flow-community-title">Inventory mandate</strong>
-            <p id="flow-community-detail">Waiting for community state.</p>
+            <p id="flow-community-detail">Menunggu state komunitas.</p>
             <div id="flow-community-facts" class="fact-grid"></div>
           </article>
         </section>
@@ -72,9 +72,9 @@
 
       <section class="metrics" aria-label="Protocol metrics">
         <button class="metric metric-button" data-view="deal" type="button">
-          <span class="metric-label">Sponsorship Deals</span>
+          <span class="metric-label">Deal State</span>
           <strong id="metric-deals">0</strong>
-          <span class="metric-hint">Signed transaction states</span>
+          <span class="metric-hint">State transaksi tersimpan</span>
         </button>
         <button class="metric metric-button" data-view="policy" type="button">
           <span class="metric-label">Policy Checks</span>
@@ -82,27 +82,27 @@
           <span class="metric-hint">Identity, reputation, content</span>
         </button>
         <button class="metric metric-button" data-view="proof" type="button">
-          <span class="metric-label">Proof Bundles</span>
+          <span class="metric-label">Proof Bundle</span>
           <strong id="metric-proofs">0</strong>
           <span class="metric-hint" id="metric-payments">0 payment receipts</span>
         </button>
         <button class="metric metric-button" data-view="redteam" type="button">
-          <span class="metric-label">Risk Review</span>
+          <span class="metric-label">Tinjauan Risiko</span>
           <strong id="metric-redteam">n/a</strong>
-          <span class="metric-hint">Unsafe deal containment</span>
+          <span class="metric-hint">Konten berisiko ditahan</span>
         </button>
       </section>
 
       <section class="workflow-panel" aria-label="Agent workflow">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Agent Workflow</p>
+            <p class="eyebrow">Alur Agent</p>
             <h2 id="stage-title">Loading Deal</h2>
             <p id="stage-summary">Loading signed deal evidence and policy trail.</p>
           </div>
           <div class="stage-proof">
-            <span class="label">Selected Evidence</span>
-            <strong id="stage-evidence">Awaiting proof bundle</strong>
+            <span class="label">Bukti Terpilih</span>
+            <strong id="stage-evidence">Menunggu proof bundle</strong>
           </div>
         </div>
         <div id="flow-steps" class="flow-steps"></div>
@@ -117,30 +117,30 @@
       <section class="narrative-panel" aria-label="Sponsorship settlement summary">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Settlement Summary</p>
-            <h2 id="narrative-headline">No completed transaction selected.</h2>
+            <p class="eyebrow">Ringkasan Payment</p>
+            <h2 id="narrative-headline">Belum ada transaksi selesai.</h2>
           </div>
-          <span id="narrative-mode">Agent view</span>
+          <span id="narrative-mode">Tampilan agent</span>
         </div>
         <div class="narrative-grid">
           <article>
             <span class="label">Sponsor</span>
-            <strong id="story-sponsor">Waiting</strong>
+            <strong id="story-sponsor">Menunggu</strong>
             <p id="story-sponsor-detail">The funder sets budget and ad copy.</p>
           </article>
           <article>
             <span class="label">Community</span>
-            <strong id="story-community">Waiting</strong>
+            <strong id="story-community">Menunggu</strong>
             <p id="story-community-detail">The community sets floor price and content rules.</p>
           </article>
           <article>
             <span class="label">Escrow</span>
-            <strong id="story-escrow">Waiting</strong>
+            <strong id="story-escrow">Menunggu</strong>
             <p id="story-escrow-detail">Funds lock before delivery and settle after proof.</p>
           </article>
           <article>
             <span class="label">Proof</span>
-            <strong id="story-proof">Waiting</strong>
+            <strong id="story-proof">Menunggu</strong>
             <p id="story-proof-detail">Receipts preserve why the agents acted.</p>
           </article>
         </div>
@@ -149,14 +149,14 @@
       <section class="registry-panel" aria-label="Live agent identity and settlement registry">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Protocol Evidence</p>
-            <h2>Agent identity, reputation, and payment records.</h2>
+            <p class="eyebrow">Bukti Protocol</p>
+            <h2>Agent identity, reputation, dan payment record.</h2>
           </div>
-          <span id="registry-status">waiting for agent run</span>
+          <span id="registry-status">menunggu agent run</span>
         </div>
         <div id="registry-agent-grid" class="registry-grid"></div>
         <div class="registry-subhead">
-          <span class="label">Settlement Evidence</span>
+          <span class="label">Bukti Settlement</span>
           <strong id="registry-source">No settled escrow selected.</strong>
         </div>
         <div id="registry-evidence-grid" class="evidence-grid"></div>
@@ -165,20 +165,20 @@
       <section class="pov-panel" aria-label="Two user agent point of view">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Agent Decisions</p>
+            <p class="eyebrow">Keputusan Agent</p>
             <h2>Sponsor dan community melihat agent yang berbeda, bukan satu admin console.</h2>
           </div>
-          <span id="pov-mode">waiting</span>
+          <span id="pov-mode">menunggu</span>
         </div>
         <div class="pov-grid">
           <article class="pov-card sponsor-pov">
             <span class="label">Sponsor User</span>
-            <strong>Buy a qualified community post</strong>
+            <strong>Membeli placement komunitas yang lolos kualifikasi</strong>
             <div id="sponsor-pov" class="pov-chat"></div>
           </article>
           <article class="pov-card community-pov">
             <span class="label">Community Owner</span>
-            <strong>Sell one ad slot without manual negotiation</strong>
+            <strong>Menjual satu slot tanpa negosiasi manual</strong>
             <div id="community-pov" class="pov-chat"></div>
           </article>
         </div>
@@ -188,14 +188,14 @@
         <div class="section-head">
           <div>
             <p class="eyebrow">Mandate Builder</p>
-            <h2>Users define boundaries once. The agents execute inside them.</h2>
+            <h2>User menentukan batasan sekali. Agent mengeksekusi di dalam batas itu.</h2>
           </div>
-          <button id="save-mandates" type="button">Save Mandates</button>
+          <button id="save-mandates" type="button">Simpan Mandate</button>
         </div>
         <div class="mandate-grid">
           <article class="mandate-card sponsor-setup">
             <span class="label">Sponsor User -> SponsorAgent</span>
-            <strong>Buy a qualified community post</strong>
+            <strong>Membeli placement komunitas yang lolos kualifikasi</strong>
             <div class="mandate-fields">
               <label>Campaign <input id="sponsor-campaign" type="text"></label>
               <label>Total budget USDC <input id="sponsor-budget" type="number" min="1" step="1"></label>
@@ -208,7 +208,7 @@
           </article>
           <article class="mandate-card community-setup">
             <span class="label">Community Owner -> CommunityAgent</span>
-            <strong>Sell one safe ad slot without manual negotiation</strong>
+            <strong>Menjual satu slot aman tanpa negosiasi manual</strong>
             <div class="mandate-fields">
               <label>Platform
                 <select id="community-platform">
@@ -230,9 +230,9 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Conversational Intake</p>
-              <h2>OpenClaw extracts sponsor and community mandates from natural language.</h2>
+              <h2>OpenClaw membaca mandate sponsor dan komunitas dari percakapan natural.</h2>
             </div>
-            <button id="save-chat-mandates" type="button">Save Chat Mandates</button>
+            <button id="save-chat-mandates" type="button">Simpan dari Chat</button>
           </div>
           <div class="intake-grid">
             <article class="intake-card sponsor-intake">
@@ -241,7 +241,7 @@
               <div id="sponsor-intake-log" class="intake-log"></div>
               <div class="intake-compose">
                 <textarea id="sponsor-intake-input" rows="3" placeholder="Example: I want to sponsor AI infra communities. Budget 500 USDC, max 31/post. No gambling or scams. Ad copy: ..."></textarea>
-                <button id="sponsor-intake-send" type="button">Send</button>
+                <button id="sponsor-intake-send" type="button">Kirim</button>
               </div>
             </article>
             <article class="intake-card community-intake">
@@ -250,26 +250,26 @@
               <div id="community-intake-log" class="intake-log"></div>
               <div class="intake-compose">
                 <textarea id="community-intake-input" rows="3" placeholder="Example: I run a 900-member Discord. Floor 24 USDC, max 2 ads/day. No gambling, no scams."></textarea>
-                <button id="community-intake-send" type="button">Send</button>
+                <button id="community-intake-send" type="button">Kirim</button>
               </div>
             </article>
           </div>
         </div>
-        <p id="mandate-save-status" class="mandate-status">Saved mandates are used by agent negotiation, OpenClaw orchestration, and local protocol runs.</p>
+        <p id="mandate-save-status" class="mandate-status">Mandate yang tersimpan dipakai untuk negosiasi agent, OpenClaw orchestration, dan local protocol run.</p>
       </section>
 
       <section class="run-panel" aria-label="Protocol operations">
         <div class="section-head">
           <div>
             <p class="eyebrow">Protocol Operations</p>
-            <h2>Alternative execution paths for technical review.</h2>
-            <p>Use these when judges ask how OpenClaw, Discord delivery, contracts, or protocol services are wired.</p>
+            <h2>Jalur eksekusi untuk review teknikal.</h2>
+            <p>Gunakan bagian ini saat judge ingin melihat bagaimana OpenClaw, Discord delivery, contract, dan protocol service terhubung.</p>
           </div>
         </div>
         <div class="run-actions">
           <button id="run-openclaw-duel" class="run-choice" type="button">
             <strong>OpenClaw Tool Orchestration</strong>
-            <span>Two OpenClaw roles alternate sponsor/community tools.</span>
+            <span>Dua role OpenClaw menjalankan tool sponsor dan komunitas secara bergantian.</span>
           </button>
           <button id="run-openclaw-gemini" class="run-choice" type="button">
             <strong>OpenClaw + GLM</strong>
@@ -291,12 +291,12 @@
         <div id="live-replay" class="live-replay" aria-label="Animated run replay"></div>
         <div id="openclaw-result" class="openclaw-result">
           <span class="label">Agent Result</span>
-          <strong>Waiting for an orchestration run.</strong>
-          <p>Start a sponsorship flow to record the agent actions and settlement evidence.</p>
+          <strong>Menunggu orchestration run.</strong>
+          <p>Mulai alur sponsorship untuk merekam agent action dan settlement evidence.</p>
         </div>
         <details class="audit-drawer">
           <summary>Protocol execution log</summary>
-          <pre id="run-log" class="run-log">No protocol run has started from this workspace yet.</pre>
+          <pre id="run-log" class="run-log">Belum ada protocol run dari workspace ini.</pre>
         </details>
       </section>
 
