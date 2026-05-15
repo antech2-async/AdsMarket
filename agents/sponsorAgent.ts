@@ -7,6 +7,7 @@ import { SponsorPolicy } from '../services/policyService';
 import { DealStateService, buildDealId } from '../services/dealStateService';
 import { buildAgreementEvidence } from '../services/agreementService';
 import { AgentMemoryService } from '../services/agentMemoryService';
+import { DokuService, type DokuCheckoutResult } from '../services/dokuService';
 import { runtimeChain, runtimeRpcUrl } from '../services/chainConfig';
 import { signMessage, verifySignature } from '../utils/signing';
 import { withRetry } from '../utils/retryUtils';
@@ -33,6 +34,7 @@ export class SponsorAgent {
   private persistence = new PersistenceService();
   private dealState = new DealStateService('sponsor_deals');
   private memory = new AgentMemoryService();
+  private doku = new DokuService();
   private policy: SponsorPolicy;
   private account;
   private walletClient;
@@ -295,41 +297,7 @@ Example:
     }
   ): Promise<string> {
     return withRetry(async () => {
-      // ----------------------------------------------------
-      // HACKATHON SPONSOR: DOKU API INTEGRATION
-      // Use DOKU HTTP API to generate a Fiat payment link for the 2% protocol fee
-      // ----------------------------------------------------
-      if (process.env.DOKU_CLIENT_ID && process.env.DOKU_ENABLE_CHECKOUT === 'true') {
-        console.log(`[DOKU] Generating QRIS/VA payment link for 2% protocol fee ($0.60 USD) via DOKU Sandbox API...`);
-        // We calculate fee based on 2% of the deal
-        const protocolFeeUsd = (agreedPriceUsdc * 0.02).toFixed(2);
-        
-        try {
-          const dokuResponse = await axios.post(
-            'https://api-sandbox.doku.com/checkout/v1/payment',
-            {
-              order: { invoice_number: `INV-${Date.now()}`, amount: protocolFeeUsd },
-              payment: { payment_due_date: 60 }
-            },
-            {
-              headers: { 
-                'Client-Id': process.env.DOKU_CLIENT_ID,
-                'Request-Id': `REQ-${Date.now()}`,
-                'Request-Timestamp': new Date().toISOString()
-              },
-              timeout: 5000
-            }
-          );
-          console.log(`[DOKU] Payment Link Generated: ${dokuResponse.data?.response?.payment?.url || 'Link generated'}`);
-          console.log(`[DOKU] Fee paid. Releasing smart contract escrow lock...`);
-        } catch (err: any) {
-          console.warn(`[DOKU] API call failed: ${err.message}`);
-          if (process.env.DOKU_REQUIRED === 'true') {
-            throw err;
-          }
-          console.warn(`[DOKU] Continuing escrow funding because DOKU_REQUIRED is not true.`);
-        }
-      }
+      const dokuCheckout = await this.prepareDokuCheckout(agreedPriceUsdc, communityWallet);
 
       const amountWei = parseUnits(String(agreedPriceUsdc), 6);
       await usdcContract.write.approve([escrowContract.address, amountWei]);
@@ -373,7 +341,7 @@ Example:
         actor: 'sponsor',
         type: 'ESCROW_FUNDED',
         summary: `Funded escrow for $${agreedPriceUsdc} USDC.`,
-        payload: { txHash, agreement: evidence?.agreementPayload, agreementHash: evidence?.agreementHash, contentHash: evidence?.contentHash },
+        payload: { txHash, agreement: evidence?.agreementPayload, agreementHash: evidence?.agreementHash, contentHash: evidence?.contentHash, dokuCheckout },
       }, {
         sponsorWallet: this.account.address,
         communityWallet,
@@ -385,6 +353,31 @@ Example:
       await this.persistMemorySnapshot();
       return txHash;
     });
+  }
+
+  private async prepareDokuCheckout(
+    agreedPriceUsdc: number,
+    communityWallet: string,
+  ): Promise<DokuCheckoutResult | undefined> {
+    if (process.env.DOKU_ENABLE_CHECKOUT !== 'true') return undefined;
+    const protocolFeeUsd = Math.max(1, agreedPriceUsdc * 0.02);
+    console.log(`[DOKU] Creating checkout for protocol fee $${protocolFeeUsd.toFixed(2)} USD.`);
+    const result = await this.doku.createCheckout({
+      amountUsd: protocolFeeUsd,
+      description: `AdSourcing protocol fee for ${agreedPriceUsdc} USDC sponsorship deal.`,
+      sponsorWallet: this.account.address,
+      communityWallet,
+    });
+    if (result.ok) {
+      console.log(`[DOKU] Checkout ready. Invoice ${result.invoiceNumber}. ${result.paymentUrl ?? 'No URL returned.'}`);
+      return result;
+    }
+    console.warn(`[DOKU] Checkout failed: ${result.error}`);
+    if (process.env.DOKU_REQUIRED === 'true') {
+      throw new Error(`DOKU checkout required but failed: ${result.error}`);
+    }
+    console.warn('[DOKU] Continuing escrow funding because DOKU_REQUIRED is not true.');
+    return result;
   }
 
   getRuntimeStatus() {

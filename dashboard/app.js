@@ -227,6 +227,10 @@ function renderRegistry(data) {
   const mem9State = mem9.configured
     ? (mem9.lastWriteAt ? 'Mem9 wrote deal memory ' + new Date(mem9.lastWriteAt).toLocaleTimeString() : 'Mem9 configured, waiting for deal write')
     : 'Mem9 not configured for runtime writes';
+  const doku = data?.doku || {};
+  const dokuState = doku.enabled
+    ? (doku.configured ? (doku.lastPaymentUrl ? 'DOKU checkout ready' : 'DOKU configured, waiting for checkout') : 'DOKU enabled but credentials missing')
+    : 'DOKU checkout disabled';
 
   const agents = [
     { role: 'Sponsor Agent', side: 'sponsor', agentId: firstDefined(theater.sponsor?.agentId, sponsorMandate.agentId, 'not registered in current run'), wallet: firstDefined(theater.sponsor?.wallet, sponsorMandate.wallet, 'n/a'), score: sponsorScore, gate: 'Counterparty min score ' + (sponsorMandate.mandate?.minReputationScore ?? 'n/a'), action: theater.intent?.txHash ? 'broadcast ' + short(theater.intent.txHash) : 'waiting for intent' },
@@ -260,6 +264,8 @@ function renderRegistry(data) {
     ['Payment receipt', theater.proof?.receiptId || latestPayment?.receiptId || 'n/a'],
     ['Memory layer', mem9State],
     ['Mem9 stored deals', mem9.storedCount === undefined ? 'n/a' : String(mem9.storedCount)],
+    ['DOKU rail', dokuState],
+    ['DOKU invoice', doku.lastInvoiceNumber || 'n/a'],
   ];
   const chainLabel = chain.name ? chain.name + (chain.chainId ? ' / chain ' + chain.chainId : '') : 'VPS private ERC-8004-compatible demo chain';
   $('#registry-source').textContent = chainLabel + ' | ' + mem9State;

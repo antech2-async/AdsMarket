@@ -25,6 +25,7 @@
     "openclaw": "ts-node server/openclawBridgeServer.ts",
     "openclaw:bridge": "ts-node server/openclawBridgeServer.ts",
     "live:preflight": "ts-node scripts/livePreflight.ts --strict",
+    "doku:preflight": "ts-node scripts/dokuPreflight.ts",
     "live": "ts-node scripts/runLive.ts",
     "sponsor": "ts-node server/sponsorServer.ts",
     "community": "ts-node server/communityServer.ts"

@@ -14,6 +14,13 @@ export interface PaymentReceipt {
   status: 'FUNDED' | 'SETTLED' | 'DISPUTED' | 'REFUNDED';
   txHashes: string[];
   proofHash?: string;
+  externalPaymentRail?: {
+    provider: 'doku';
+    invoiceNumber?: string;
+    paymentUrl?: string;
+    status: 'CREATED' | 'SKIPPED' | 'FAILED';
+    error?: string;
+  };
   generatedAt: number;
 }
 
@@ -24,6 +31,7 @@ export function buildPaymentReceipt(input: {
   status: PaymentReceipt['status'];
   txHashes?: string[];
   proofHash?: string;
+  externalPaymentRail?: PaymentReceipt['externalPaymentRail'];
 }): PaymentReceipt {
   const protocolFeePercent = input.protocolFeePercent ?? 2;
   const protocolFeeUsdc = roundUsdc(input.amountUsdc * protocolFeePercent / 100);
@@ -40,6 +48,7 @@ export function buildPaymentReceipt(input: {
     status: input.status,
     txHashes: input.txHashes ?? [],
     proofHash: input.proofHash,
+    externalPaymentRail: input.externalPaymentRail,
     generatedAt,
   };
 

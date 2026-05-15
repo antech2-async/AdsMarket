@@ -6,6 +6,7 @@ import { spawn } from 'child_process';
 import { CACHE_DIR, REPO_ROOT } from '../services/pathConfig';
 import { loadConfiguredMandates, saveConfiguredMandates } from '../services/mandateConfigService';
 import { AgentMemoryService } from '../services/agentMemoryService';
+import { DokuService } from '../services/dokuService';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ const ROOT = REPO_ROOT;
 const DASHBOARD_DIR = path.join(ROOT, 'dashboard');
 const RUN_STATE_FILE = path.join(CACHE_DIR, 'dashboard-run-state.json');
 const memoryService = new AgentMemoryService();
+const dokuService = new DokuService();
 const DEFAULT_OPENCLAW_MODEL =
   process.env.ADSOURCING_OPENCLAW_MODEL
   ?? process.env.OPENCLAW_MODEL
@@ -198,6 +200,7 @@ app.get('/api/cockpit', async (_req, res) => {
   const sponsorMemory = await readJson(path.join(CACHE_DIR, 'sponsor_memory.json'), null);
   const communityMemory = await readJson(path.join(CACHE_DIR, 'community_memory.json'), null);
   const mem9 = await memoryService.mem9Status();
+  const doku = await dokuService.status();
   const mandates = await loadConfiguredMandates();
   const theater = await readJson(path.join(CACHE_DIR, 'two-agent-theater-state.json'), null);
   const proofs = await listProofs();
@@ -236,6 +239,7 @@ app.get('/api/cockpit', async (_req, res) => {
       community: communityMemory,
       mem9,
     },
+    doku,
     mandates: {
       sponsor: mandates.sponsorSnapshot ?? {
         role: 'sponsor',

@@ -11,6 +11,7 @@ import { buildPaymentReceipt, writePaymentReceipt } from '../services/paymentRec
 import { loadConfiguredMandates } from '../services/mandateConfigService';
 import { PersistenceService } from '../services/persistenceService';
 import { AgentMemoryService } from '../services/agentMemoryService';
+import { DokuService } from '../services/dokuService';
 import { NegotiationResponse } from '../types/messages';
 import { REPO_ROOT } from '../services/pathConfig';
 import mockUsdcArtifact from '../artifacts/contracts/MockUSDC.sol/MockUSDC.json';
@@ -339,6 +340,7 @@ export async function runAgenthonLocal() {
         status: 'SETTLED',
         txHashes: [intentTx, escrowTx, delivery.txHash],
         proofHash: proof.bundle.finalHash,
+        externalPaymentRail: await dokuReceipt(),
       });
       const paymentPath = await writePaymentReceipt(paymentReceipt);
       const memory = new AgentMemoryService();
@@ -378,6 +380,25 @@ export async function runAgenthonLocal() {
       console.log('[AgenthonLocal] Stopped local Hardhat node.');
     }
   }
+}
+
+async function dokuReceipt() {
+  const status = await new DokuService().status();
+  if (!status.enabled) return { provider: 'doku' as const, status: 'SKIPPED' as const };
+  if (status.lastCheckoutAt && status.lastInvoiceNumber) {
+    return {
+      provider: 'doku' as const,
+      status: status.lastError ? 'FAILED' as const : 'CREATED' as const,
+      invoiceNumber: status.lastInvoiceNumber,
+      paymentUrl: status.lastPaymentUrl,
+      error: status.lastError,
+    };
+  }
+  return {
+    provider: 'doku' as const,
+    status: status.configured ? 'SKIPPED' as const : 'FAILED' as const,
+    error: status.configured ? undefined : 'DOKU credentials are not configured.',
+  };
 }
 
 if (require.main === module) {
