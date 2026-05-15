@@ -651,6 +651,93 @@ h3 {
   font-size: 11px;
 }
 
+.registry-panel {
+  margin: 0 0 14px;
+  padding: 14px;
+  border: 1px solid rgba(86, 240, 255, 0.22);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(86, 240, 255, 0.055), rgba(96, 244, 173, 0.045)), var(--panel);
+}
+
+.registry-panel .panel-head { align-items: start; }
+
+#registry-status {
+  color: var(--text);
+  border: 1px solid rgba(96, 244, 173, 0.28);
+  background: rgba(96, 244, 173, 0.08);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.registry-grid, .evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.registry-card, .evidence-tile {
+  min-width: 0;
+  border: 1px solid rgba(86, 240, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(9, 14, 16, 0.72);
+}
+
+.registry-card { padding: 12px; }
+.registry-card.sponsor { border-color: rgba(181, 145, 255, 0.28); }
+.registry-card.community { border-color: rgba(96, 244, 173, 0.28); }
+
+.registry-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.registry-card-head strong { color: var(--good); font-size: 13px; }
+
+.registry-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.registry-card dl div, .evidence-tile {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.registry-card dt { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.registry-card dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.registry-subhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 13px 0 9px;
+}
+
+.registry-subhead strong { color: var(--muted); font-size: 12px; text-align: right; }
+.evidence-tile strong {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text);
+  font-size: 12px;
+}
 .mandate-panel {
   margin: 0 0 14px;
   padding: 14px;
@@ -1564,6 +1651,8 @@ h3 {
 
   .metrics,
   .mandate-grid,
+  .registry-grid,
+  .evidence-grid,
   .intake-grid,
   .run-panel,
   .narrative-grid,
@@ -1576,6 +1665,7 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .registry-card dl,
   .mandate-fields {
     grid-template-columns: 1fr;
   }

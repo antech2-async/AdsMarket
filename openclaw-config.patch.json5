@@ -15,9 +15,18 @@
         hooks: {
           allowConversationAccess: true
         },
-        config: {}
+        config: {
+          apiUrl: "https://api.mem9.ai",
+          provisionToken: "prov_7a8b9c0d1e2f3a4b",
+          apiKey: "<YOUR_MEM9_API_KEY>",
+          provisionQueryParams: {
+            utm_source: "TiDB",
+            utm_medium: "Hkctn"
+          }
+        }
       }
     },
+    allow: ["mem9", "adsourcing"]
   },
   mcp: {
     servers: {
@@ -27,21 +36,5 @@
       }
     }
   },
-  tools: {
-    profile: "minimal",
-    allow: [
-      "adsourcing_status",
-      "adsourcing_run_agenthon_local",
-      "adsourcing_get_evidence",
-      "adsourcing_theater_status",
-      "adsourcing_theater_reset",
-      "adsourcing_sponsor_broadcast",
-      "adsourcing_community_handshake",
-      "adsourcing_sponsor_offer",
-      "adsourcing_community_decide",
-      "adsourcing_sponsor_fund",
-      "adsourcing_community_deliver",
-      "adsourcing_sponsor_settle",
-    ],
-  },
+  tools: null,
 }

@@ -106,13 +106,14 @@ export class AgentTheaterService {
     await (sponsor as any).erc8004.postFeedback(sponsorAgentId, 78, 'theater.seed.sponsor', 'inline://seed-sponsor');
     await (sponsor as any).erc8004.postFeedback(communityAgentId, 82, 'theater.seed.community', 'inline://seed-community');
 
-    if (allowLocalDelivery && !hasDiscord) {
+    if (allowLocalDelivery) {
       (community as any).delivery.postToDiscord = async () => `local-message-${Date.now()}`;
       sponsor.verifyDelivery = async () => true;
     }
 
     const sponsorChain = new LiveChainService(LOCAL_SPONSOR_KEY);
     const communityChain = new LiveChainService(LOCAL_COMMUNITY_KEY);
+    await sponsorChain.adEscrow(deployment.adEscrow).write.setDisputeWindow([0n]);
 
     this.runtime = {
       node,
@@ -265,7 +266,11 @@ export class AgentTheaterService {
       sponsorAgentId: runtime.sponsorAgentId,
       communityAgentId: runtime.communityAgentId,
     });
-    await settlement.processSettlements();
+    const settlementResults = await settlement.processSettlements();
+    const settlementResult = settlementResults.find((result) => result.escrowId === runtime.escrowId!.toString());
+    if (settlementResult?.status !== 'settled') {
+      throw new Error(`Escrow ${runtime.escrowId} did not settle. Status: ${settlementResult?.status ?? 'missing'}${settlementResult?.error ? ` (${settlementResult.error})` : ''}`);
+    }
     runtime.settled = true;
 
     const communityDeal = runtime.community.getRuntimeStatus().deals.find((deal: any) => deal.dealId === `${runtime.intentId}:${runtime.sponsorAccount.address.toLowerCase()}`);
@@ -318,6 +323,7 @@ export class AgentTheaterService {
   }
 
   async dispose() {
+    await this.runtime?.community.shutdown().catch(() => undefined);
     if (process.env.AGENTHON_STOP_LOCAL_NODE === 'true' && this.runtime?.node) {
       if (process.platform === 'win32' && this.runtime.node.pid) {
         spawn(`taskkill /PID ${this.runtime.node.pid} /T /F`, { shell: true });

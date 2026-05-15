@@ -13,3 +13,7 @@ typechain-types
 dist
 build
 .DS_Store
+scratch/
+*.zip
+*.tgz
+scripts/ssh_*.js

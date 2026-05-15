@@ -77,10 +77,8 @@ export class MockReputationService implements IReputationService {
   }
 }
 
-const USE_MOCK_REPUTATION = process.env.USE_MOCK_REPUTATION === 'true';
-
 export function createReputationService(): IReputationService {
-  if (USE_MOCK_REPUTATION) {
+  if (process.env.USE_MOCK_REPUTATION === 'true') {
     console.log('[ReputationService] Using MOCK implementation');
     return new MockReputationService();
   }

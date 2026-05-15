@@ -359,6 +359,10 @@ Ad copy to evaluate: "${adCopy}"`;
     };
   }
 
+  async shutdown(): Promise<void> {
+    await this.delivery.close();
+  }
+
   private async fetchAdCopy(uri: string): Promise<string> {
     if (uri === 'ipfs://mock-ad-copy') {
         return "🚀 Join the AdMarket Revolution! Decentralized sponsorship for micro-communities.";

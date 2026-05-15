@@ -9,6 +9,7 @@ import { SettlementService } from '../services/settlementService';
 import { writeProofBundle } from '../services/evidenceService';
 import { buildPaymentReceipt, writePaymentReceipt } from '../services/paymentReceiptService';
 import { loadConfiguredMandates } from '../services/mandateConfigService';
+import { PersistenceService } from '../services/persistenceService';
 import { NegotiationResponse } from '../types/messages';
 import { REPO_ROOT } from '../services/pathConfig';
 import mockUsdcArtifact from '../artifacts/contracts/MockUSDC.sol/MockUSDC.json';
@@ -23,6 +24,19 @@ export const LOCAL_RPC_URL = process.env.LOCAL_RPC_URL || 'http://127.0.0.1:8545
 export const LOCAL_SPONSOR_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80' as Hex;
 export const LOCAL_COMMUNITY_KEY = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d' as Hex;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function resetLocalRuntimeState() {
+  if (process.env.AGENTHON_KEEP_STATE === 'true') return;
+  const persistence = new PersistenceService();
+  await Promise.all([
+    persistence.clearState('sponsor_deals'),
+    persistence.clearState('community_deals'),
+    persistence.clearState('sponsor_negotiations'),
+    persistence.clearState('community_state'),
+    persistence.clearState('sponsor_memory'),
+    persistence.clearState('community_memory'),
+  ]);
+}
 
 export interface LocalDeployment {
   mockUsdc: Address;
@@ -112,7 +126,7 @@ export async function deployLocal(): Promise<LocalDeployment> {
     address: adEscrow,
     abi: adEscrowArtifact.abi,
     functionName: 'setDisputeWindow',
-    args: [1n],
+    args: [5n],
   });
   await publicClient.waitForTransactionReceipt({ hash: windowHash });
 
@@ -152,7 +166,9 @@ export async function parseEventId(publicClient: any, txHash: Hex, artifact: any
 
 export async function runAgenthonLocal() {
   const node = await ensureHardhatNode();
+  let communityForCleanup: CommunityAgent | undefined;
   try {
+    await resetLocalRuntimeState();
     const deployment = await deployLocal();
     configureEnv(deployment);
 
@@ -161,6 +177,7 @@ export async function runAgenthonLocal() {
     const publicClient = createPublicClient({ chain: hardhatLocal, transport: http(LOCAL_RPC_URL) });
 
     const { sponsorMandate, communityMandate } = await loadConfiguredMandates();
+    console.log(`[AgenthonLocal] Loaded mandates. Community Channel: ${communityMandate.channelId}`);
 
     const useLocalDelivery = process.env.AGENTHON_ALLOW_LOCAL_DELIVERY === 'true';
     const hasDiscord = Boolean(process.env.COMMUNITY_DISCORD_BOT_TOKEN && process.env.SPONSOR_DISCORD_BOT_TOKEN && process.env.DEMO_DISCORD_GUILD_ID && process.env.DEMO_DISCORD_CHANNEL_ID);
@@ -170,6 +187,7 @@ export async function runAgenthonLocal() {
 
     const sponsor = new SponsorAgent(LOCAL_SPONSOR_KEY, sponsorMandate);
     const community = new CommunityAgent(LOCAL_COMMUNITY_KEY, communityMandate);
+    communityForCleanup = community;
 
     await sponsor.initialize(process.env.SPONSOR_AGENT_CARD_URI ?? 'inline://sponsor-agent-card');
     await community.initialize(process.env.COMMUNITY_AGENT_CARD_URI ?? 'inline://community-agent-card');
@@ -180,7 +198,7 @@ export async function runAgenthonLocal() {
     await (sponsor as any).erc8004.postFeedback(sponsorAgentId, 78, 'agenthon.seed.sponsor', 'inline://seed-sponsor');
     await (sponsor as any).erc8004.postFeedback(communityAgentId, 82, 'agenthon.seed.community', 'inline://seed-community');
 
-    if (useLocalDelivery && !hasDiscord) {
+    if (useLocalDelivery) {
       (community as any).delivery.postToDiscord = async () => {
         const id = `local-message-${Date.now()}`;
         if (process.env.REPLIZ_KEY) {
@@ -191,7 +209,7 @@ export async function runAgenthonLocal() {
         return id;
       };
       sponsor.verifyDelivery = async () => true;
-      console.log('[AgenthonLocal] Using explicit local delivery adapter. Set Discord env vars for real bot delivery.');
+      console.log('[AgenthonLocal] Using explicit local delivery adapter. Set AGENTHON_ALLOW_LOCAL_DELIVERY=false for real Discord delivery.');
     }
 
     const sponsorChain = new (await import('../services/liveChainService')).LiveChainService(LOCAL_SPONSOR_KEY);
@@ -281,7 +299,7 @@ export async function runAgenthonLocal() {
     settlement.register({
       escrowId: escrowId.toString(),
       deliveryProof: delivery.deliveryProof,
-      settleAfterMs: 0,
+      settleAfterMs: 6000,
       communityWallet: communityAccount.address,
       sponsorAgent: sponsor,
       escrowContract: escrowSponsor,
@@ -289,7 +307,14 @@ export async function runAgenthonLocal() {
       sponsorAgentId,
       communityAgentId,
     });
-    await settlement.processSettlements();
+    // Wait for settlement to become due and process it
+    console.log(`[AgenthonLocal] Waiting for settlement window (6s)...`);
+    await sleep(7000); 
+    const settlementResults = await settlement.processSettlements();
+    const settlementResult = settlementResults.find((result) => result.escrowId === escrowId.toString());
+    if (settlementResult?.status !== 'settled') {
+      throw new Error(`Escrow ${escrowId} did not settle. Status: ${settlementResult?.status ?? 'missing'}${settlementResult?.error ? ` (${settlementResult.error})` : ''}`);
+    }
 
     const communityDeal = community.getRuntimeStatus().deals.find((deal: any) => deal.dealId === `${intentId}:${sponsorAccount.address.toLowerCase()}`);
     if (communityDeal) {
@@ -321,6 +346,7 @@ export async function runAgenthonLocal() {
 
     return deployment;
   } finally {
+    await communityForCleanup?.shutdown().catch(() => undefined);
     if (node) {
       if (process.platform === 'win32' && node.pid) {
         spawn(`taskkill /PID ${node.pid} /T /F`, { shell: true });
@@ -334,7 +360,7 @@ export async function runAgenthonLocal() {
 
 if (require.main === module) {
   runAgenthonLocal().catch((error) => {
-    console.error(error);
+    console.error(error.message || error);
     process.exitCode = 1;
   });
 }
